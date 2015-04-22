@@ -46,18 +46,30 @@ split_text_flat = FOREACH places_posts_distinct GENERATE post_month, place_id, s
 
 split_text_flat = FILTER split_text_flat BY word != '';
 
+-- group to generate the counts
 places_posts_counted = GROUP split_text_flat BY (place_id, post_month, source, word);
 places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(split_text_flat) AS word_count;
 
+-- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_id AS place_id, group::post_month AS post_month, 
                             group::word AS word, word_count, group::source AS source;
+
+-- group again to place all sources and counts on same row
+places_posts_regrouped = GROUP places_posts_flattened BY (place_id, post_month, word);
+
+-- now use a UDF to format the outp
+output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
+
+output_data = FOREACH output_data GENERATE group::place_id AS place_id, group::post_month AS post_month, 
+                            group::word AS word, lm_udf.map_output(places_posts_flattened) AS counts;
 
 -- word_count_filtered = FILTER places_posts_flattened BY word_count > 1;
 
 -- DESCRIBE word_count_filtered;
 -- If you can figure out how to insert MerchantID into Mongo as a BSON ObjectID, we can use this code to insert
--- STORE word_count_filtered INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
---              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
+             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 -- STORE word_count_filtered INTO '$OUTPUT' USING PigStorage('\t');
-DUMP places_posts_flattened;
+-- DESCRIBE output_data;
+-- DUMP output_data;
 

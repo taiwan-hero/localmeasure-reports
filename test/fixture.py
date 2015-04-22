@@ -42,15 +42,27 @@ def create_merchant(name, expired=False):
     return db.merchants.insert_one({'name': name, 'subscription': {'expires_at': expires_at}})
 
 def create_place_for_merchant(merchant_id, place_name, venue_ids):
-    return db.places.insert_one({'name': place_name, 'merchant_id': merchant_id, 'venue_ids': venue_ids})
+    return db.places.insert_one({'name': place_name, 
+                                'merchant_id': merchant_id, 
+                                'venue_ids': venue_ids})
 
 def create_post(post_id, secondary_venue_ids, post_time, text):
     posted_at = datetime.datetime.strptime(post_time, "%d/%m/%y %H:%M")
-    return db.posts.insert_one({'_id': post_id, 'secondary_venue_ids': secondary_venue_ids, 'post_time': posted_at, 'text': text})
+    return db.posts.insert_one({'_id': post_id, 
+                                'secondary_venue_ids': secondary_venue_ids, 
+                                'post_time': posted_at, 
+                                'text': text})
 
 def create_audit(category, audit_type, merchant_id, audit_time, user_id, user_name):
     created_at = datetime.datetime.strptime(audit_time, "%d/%m/%y %H:%M")
-    return db.audits.insert_one({'category': category, 'type': audit_type, 'merchant_id': merchant_id, 'created_at': created_at, })
+    return db.audits.insert_one({'category': category, 
+                                'type': audit_type, 
+                                'merchant_id': merchant_id, 
+                                'created_at': created_at, 
+                                'actor': {'type': 'user', 
+                                            'object_id': user_id, 
+                                            'label': user_name}})
+
 def clear_all_merchants():
     db.merchants.delete_many({})
 

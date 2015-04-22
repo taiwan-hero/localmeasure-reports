@@ -87,3 +87,33 @@ def get_month(mongo_date):
     month = datetime.fromtimestamp(mongo_date/1000)
 
     return month.strftime('%Y%m')
+
+@outputSchema('output_bag_field_name:bag{t:(inner_field_name_1:chararray, inner_field_name_2:int)}')
+def format_output(arg0):
+    bag = []
+    # each element in the bag must be a tuple
+    bag.append(('FB', 1000))
+    bag.append(('IG', 500))
+    bag.append(('TW', 100))
+    bag.append(('4S', 50))
+
+    return bag
+
+@outputSchema('counts:map[]')
+def map_output(arg0):
+    fb_count = 0
+    ig_count = 0
+    tw_count = 0
+    _4s_count = 0
+
+    for elem in arg0:
+        if elem[4] == 'FB':
+            fb_count = int(elem[3])
+        elif elem[4] == 'IG':
+            ig_count = int(elem[3])
+        elif elem[4] == 'TW':
+            tw_count = int(elem[3])
+        elif elem[4] == '4S':
+            _4s_count = int(elem[3])
+
+    return {'FB': fb_count, 'IG': ig_count, 'TW': tw_count, '4S': _4s_count}
