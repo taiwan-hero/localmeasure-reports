@@ -33,7 +33,7 @@ split_posts = FOREACH posts GENERATE id, kind,
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
-split_posts = FILTER split_posts BY post_month == '2015Mar';
+split_posts = FILTER split_posts BY month == '2015Mar';
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
