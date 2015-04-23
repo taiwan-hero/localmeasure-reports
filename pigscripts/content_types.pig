@@ -40,7 +40,7 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 places_posts_counted = GROUP places_posts_distinct BY (merchant_id, place_name, post_month, kind);
-places_posts_counted = FOREACH places_posts_counted GENERATE group, COUNT(places_posts_distinct) AS kind_count;
+places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(places_posts_distinct) AS kind_count;
 
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
