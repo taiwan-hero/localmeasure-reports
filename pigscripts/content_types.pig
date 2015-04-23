@@ -35,7 +35,7 @@ split_posts = FOREACH posts GENERATE id, kind,
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
-                        active_split_places::name AS place_name, split_posts::id AS post_id, split_posts::source AS source,
+                        active_split_places::place_name AS place_name, split_posts::id AS post_id, split_posts::source AS source,
                         split_posts::month AS post_month, split_posts::kind AS kind;
 places_posts_distinct = DISTINCT places_posts_distinct;
 
