@@ -64,10 +64,10 @@ places_posts_more_than_once = FILTER places_posts_flattened BY word_count > 1;
 places_posts_regrouped = GROUP places_posts_more_than_once BY (place_id, post_month, word);
 
 -- now use a UDF to format the outp
-output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
+output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_more_than_once;
 
 output_data = FOREACH output_data GENERATE group::place_id AS place_id, group::post_month AS post_month, 
-                            group::word AS word, lm_udf.map_output(places_posts_flattened) AS counts;
+                            group::word AS word, lm_udf.map_output(places_posts_more_than_once) AS counts;
 
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
