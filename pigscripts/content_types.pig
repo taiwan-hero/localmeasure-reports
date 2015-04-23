@@ -24,7 +24,7 @@ active_merchants = FILTER merchants2 BY expiry == 0;
 active_places = JOIN places BY merchant_id, active_merchants BY id;
 
 -- Strip off the leading [] chars in the venue_id array. This shouldn't be necessary with Mongo loader then flatten venue_ids to a row each.
-active_split_places = FOREACH active_places GENERATE places::id AS place_id, 
+active_split_places = FOREACH active_places GENERATE places::name AS place_name, active_merchants::id AS merchant_id,
                         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
 
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
@@ -43,16 +43,16 @@ places_posts_counted = GROUP places_posts_distinct BY (merchant_id, place_name, 
 places_posts_counted = FOREACH places_posts_counted GENERATE group, COUNT(places_posts_distinct) AS kind_count;
 
 -- flatten the groupings again
-places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_name AS place_name, group::post_month AS post_month, 
+places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
                             group::kind AS kind, kind_count;
 places_posts_flattened = FILTER places_posts_flattened BY post_month == '2015Mar';
 -- group again to place all sources and counts on same row
-places_posts_regrouped = GROUP places_posts_flattened BY (place_name, post_month, kind);
+places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month, kind);
 
 -- now use a UDF to format the outp
 output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
 
-output_data = FOREACH output_data GENERATE group::place_name AS place_name, group::post_month AS post_month, 
+output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
                             group::kind AS kind, lm_udf.map_keyword_kind_counts(places_posts_flattened) AS counts,
                             lm_udf.sum_kind_counts(places_posts_flattened) AS total;
 
