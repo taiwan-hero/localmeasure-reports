@@ -33,7 +33,7 @@ split_posts = FOREACH posts GENERATE id, kind,
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
-split_posts = FILTER split_posts BY month == '2015Mar';
+-- split_posts = FILTER split_posts BY month == '2015Mar';
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
@@ -58,6 +58,7 @@ output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, gr
                             group::kind AS kind, lm_udf.map_keyword_kind_counts(places_posts_flattened) AS counts,
                             lm_udf.sum_kind_counts(places_posts_flattened) AS total;
 
+output_data = FILTER output_data BY total > 0;
 
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.kinds'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');

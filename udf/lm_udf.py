@@ -111,7 +111,7 @@ def sum_source_counts(arg):
 def map_keyword_kind_counts(arg):
     data = {'photo': 0, 'video': 0, 'text': 0, 'review': 0}
     for elem in arg:
-        data[str(elem[4])] = int(elem[3])
+        data[str(elem[3])] = int(elem[4])
 
     return data
 
@@ -120,7 +120,7 @@ def map_keyword_kind_counts(arg):
 def sum_kind_counts(arg):
     total = 0
     for elem in arg:
-        total = total + int(elem[3])    
+        total = total + int(elem[4])   
 
     return total
 
