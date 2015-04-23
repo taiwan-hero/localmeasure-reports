@@ -45,7 +45,7 @@ places_posts_counted = FOREACH places_posts_counted GENERATE group, COUNT(places
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_name AS place_name, group::post_month AS post_month, 
                             group::kind AS kind, kind_count;
-
+places_posts_flattened = FILTER places_posts_flattened BY post_month == '2015Mar';
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (place_name, post_month, kind);
 
