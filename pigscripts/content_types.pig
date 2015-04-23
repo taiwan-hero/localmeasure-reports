@@ -24,22 +24,41 @@ active_merchants = FILTER merchants2 BY expiry == 0;
 active_places = JOIN places BY merchant_id, active_merchants BY id;
 
 -- Strip off the leading [] chars in the venue_id array. This shouldn't be necessary with Mongo loader then flatten venue_ids to a row each.
-active_split_places = FOREACH active_places GENERATE places::name AS name, places::merchant_id AS merchant_id, 
-                        FLATTEN(TOKENIZE(SUBSTRING(places::venue_ids, 1, INDEXOF(places::venue_ids, ']', 0)))) AS venue_id;
+active_split_places = FOREACH active_places GENERATE places::id AS place_id, 
+                        FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
 
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
 split_posts = FOREACH posts GENERATE id, kind, 
+        SUBSTRING(id, 0, 2) AS source,
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
-        FLATTEN(TOKENIZE(SUBSTRING(secondary_venue_ids, 1, INDEXOF(secondary_venue_ids, ']', 0)))) AS venue_id;
+        FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
-                        active_split_places::name AS place_name, split_posts::id AS post_id, 
+                        active_split_places::name AS place_name, split_posts::id AS post_id, split_posts::source AS source,
                         split_posts::month AS post_month, split_posts::kind AS kind;
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 places_posts_counted = GROUP places_posts_distinct BY (merchant_id, place_name, post_month, kind);
 places_posts_counted = FOREACH places_posts_counted GENERATE group, COUNT(places_posts_distinct) AS kind_count;
 
-DUMP places_posts_counted;
+-- flatten the groupings again
+places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_name AS place_name, group::post_month AS post_month, 
+                            group::kind AS kind, kind_count;
+
+-- group again to place all sources and counts on same row
+places_posts_regrouped = GROUP places_posts_flattened BY (place_name, post_month, kind);
+
+-- now use a UDF to format the outp
+output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
+
+output_data = FOREACH output_data GENERATE group::place_name AS place_name, group::post_month AS post_month, 
+                            group::kind AS kind, lm_udf.map_keyword_kind_counts(places_posts_flattened) AS counts,
+                            lm_udf.sum_kind_counts(places_posts_flattened) AS total;
+
+
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.kinds'
+             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
+
+-- DUMP places_posts_counted;
 

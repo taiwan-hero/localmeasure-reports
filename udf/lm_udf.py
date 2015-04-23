@@ -133,6 +133,22 @@ def sum_source_counts(arg):
 
     return total
 
+@outputSchema('counts:map[]')
+def map_keyword_kind_counts(arg):
+    data = {'photo': 0, 'video': 0, 'text': 0, 'review': 0}
+    for elem in arg:
+        data[str(elem[4])] = int(elem[3])
+
+    return data
+
+@outputSchema('total:int')
+def sum_kind_counts(arg):
+    total = 0
+    for elem in arg:
+        total = total + int(elem[3])    
+
+    return total
+
 #FIXME: make this work - currently doesnt
 @outputSchema('object_id:bytearray')
 def to_object_id(arg):
