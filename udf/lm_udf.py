@@ -5,7 +5,7 @@ stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "
     "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", 
     "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren't", "around", 
     "as", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "be", "became", "because", "become", "becomes", "becoming", "been", 
-    "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", 
+    "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "between", "beyond", "both", "brief", "but", "by", 
     "c'mon", "c's", "came", "can", "can't", "cannot", "cant", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", 
     "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldn't", "course", "currently", 
     "definitely", "described", "despite", "did", "didn't", "different", "do", "does", "doesn't", "doing", "don't", "done", "down", "downwards", "during", 
@@ -72,14 +72,12 @@ def text_strip(mongo_post_text):
             continue
         if word.find('http') != -1:
             continue
-        if word[0] == '#' or word[0] == '@':
-            word = word[1:]
         if word in stop_words:
             continue
-        if len(output_text) == 0:
-            output_text = word
-        else:
+        if len(output_text) > 0:
             output_text = output_text + ' ' + word
+        else:
+            output_text = word
 
     return output_text
 
@@ -118,6 +116,22 @@ def map_output(arg0):
             _4s_count = int(elem[3])
 
     return {'FB': fb_count, 'IG': ig_count, 'TW': tw_count, '4S': _4s_count}
+
+@outputSchema('counts:map[]')
+def map_keyword_source_counts(arg):
+    data = {'FB': 0, 'IG': 0, 'TW': 0, '4S': 0}
+    for elem in arg:
+        data[str(elem[4])] = int(elem[3])
+
+    return data
+
+@outputSchema('total:int')
+def sum_source_counts(arg):
+    total = 0
+    for elem in arg:
+        total = total + int(elem[3])    
+
+    return total
 
 #FIXME: make this work - currently doesnt
 @outputSchema('object_id:bytearray')

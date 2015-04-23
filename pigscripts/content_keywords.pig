@@ -53,7 +53,6 @@ split_text_flat = FILTER split_text_flat BY word != '';
 places_posts_counted = GROUP split_text_flat BY (place_id, post_month, source, word);
 places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(split_text_flat) AS word_count;
 
-
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_id AS place_id, group::post_month AS post_month, 
                             group::word AS word, word_count, group::source AS source;
@@ -67,10 +66,10 @@ places_posts_regrouped = GROUP places_posts_more_than_once BY (place_id, post_mo
 output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_more_than_once;
 
 output_data = FOREACH output_data GENERATE group::place_id AS place_id, group::post_month AS post_month, 
-                            group::word AS word, lm_udf.map_output(places_posts_more_than_once) AS counts;
+                            group::word AS word, lm_udf.map_keyword_source_counts(places_posts_more_than_once) AS counts,
+                            lm_udf.sum_source_counts(places_posts_more_than_once) AS total;
 
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
--- DUMP output_data;
 
