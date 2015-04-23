@@ -1,13 +1,11 @@
 .PHONY: test
 
-clean:
-	find . -name \*.pyc -exec rm {\} \;
-run:
-	python app.py
-test:
-	python setup.py test
-ci-test:
-	python setup.py test --with-xunit
+run-interactions:
+	pig -x local -f pigscripts/interactions_users.pig -param JARFILES=`pwd`/jar -param LM_UDF=`pwd`/udf -param DB=localhost -param DB_PORT=27017
+
+run-keywords:
+	pig -x local -f pigscripts/content_keywords.pig -param JARFILES=`pwd`/jar -param LM_UDF=`pwd`/udf -param DB=localhost -param DB_PORT=27017
+
 develop:
 	mkdir -p hadoop-binaries
 	cd hadoop-binaries
@@ -15,3 +13,5 @@ develop:
 	wget https://archive.apache.org/dist/pig/pig-0.13.0/pig-0.13.0.tar.gz
 	tar xzf hadoop-2.4.1.tar.gz
 	tar xzf pig-0.13.0.tar.gz
+	cd ..
+	source exports.sh
