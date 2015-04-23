@@ -34,8 +34,6 @@ active_split_places = FOREACH active_places GENERATE places::name AS name, place
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
 split_posts = FOREACH posts GENERATE id, 
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
-        CONCAT(SUBSTRING(post_time, 24, 28), CONCAT(SUBSTRING(post_time, 4, 7), SUBSTRING(post_time, 8, 10))) AS day,
-        CONCAT(SUBSTRING(post_time, 24, 28), CONCAT(SUBSTRING(post_time, 4, 7), SUBSTRING(post_time, 8, 10), SUBSTRING(post_time, 11, 13))) AS hour,
         FLATTEN(TOKENIZE(SUBSTRING(secondary_venue_ids, 1, INDEXOF(secondary_venue_ids, ']', 0)))) AS venue_id;
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;

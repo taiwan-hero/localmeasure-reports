@@ -61,7 +61,14 @@ def create_audit(category, audit_type, merchant_id, audit_time, user_id, user_na
                                 'created_at': created_at, 
                                 'actor': {'type': 'user', 
                                             'object_id': user_id, 
-                                            'label': user_name}})
+                                            'label': user_name},
+                                'references': {'type': 'user', 
+                                            'object_id': user_id, 
+                                            'label': user_name},
+                                'subject': {'type': 'user', 
+                                            'object_id': user_id, 
+                                            'label': user_name}
+                                })
 
 def clear_all_merchants():
     db.merchants.delete_many({})
@@ -80,6 +87,7 @@ if __name__ == '__main__':
     clear_all_merchants()
     clear_all_places()
     clear_all_posts()
+    clear_all_audits()
 
     result = create_merchant("timcorpo")
     create_place_for_merchant(result.inserted_id, 'Tims House', ['FB-1', 'TW-1', 'IG-1','FB-11', 'FB-111'])
@@ -105,6 +113,7 @@ if __name__ == '__main__':
     create_post('FB-mm', ['FB-1', 'FB-11', 'FB-111'], '05/04/15 16:30', 'The cat sat on the mat')
     create_post('IG-nn', ['IG-2', 'IG-22', 'IG-222'], '05/04/15 17:30', 'the quick brown fox jumped over the lazy dog')
     create_post('TW-oo', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', 'Pauls frog is overweight')
+
 
 
 

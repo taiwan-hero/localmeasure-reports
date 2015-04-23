@@ -7,6 +7,7 @@ REGISTER $JARFILES/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER '$LM_UDF/lm_udf.py' using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
 -- define TransposeTupleToBag datafu.pig.util.TransposeTupleToBag();
+-- set mongo.input.query '{"value.task.creation":{ "$gte": { "$date": 1421366400}, "$lt" : { "$date": 1421539200} } }'
 
 posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
     USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray', 'id') 
@@ -35,6 +36,8 @@ split_posts = FOREACH posts GENERATE id, text,
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
+split_posts = FILTER split_posts BY month == '2015Mar';
+
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::place_id AS place_id, split_posts::id AS post_id, 
                         split_posts::month AS post_month, split_posts::text AS text, split_posts::source as source;
@@ -50,12 +53,15 @@ split_text_flat = FILTER split_text_flat BY word != '';
 places_posts_counted = GROUP split_text_flat BY (place_id, post_month, source, word);
 places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(split_text_flat) AS word_count;
 
+
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::place_id AS place_id, group::post_month AS post_month, 
                             group::word AS word, word_count, group::source AS source;
 
+places_posts_more_than_once = FILTER places_posts_flattened BY word_count > 1;
+
 -- group again to place all sources and counts on same row
-places_posts_regrouped = GROUP places_posts_flattened BY (place_id, post_month, word);
+places_posts_regrouped = GROUP places_posts_more_than_once BY (place_id, post_month, word);
 
 -- now use a UDF to format the outp
 output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
@@ -63,13 +69,8 @@ output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_pos
 output_data = FOREACH output_data GENERATE group::place_id AS place_id, group::post_month AS post_month, 
                             group::word AS word, lm_udf.map_output(places_posts_flattened) AS counts;
 
--- word_count_filtered = FILTER places_posts_flattened BY word_count > 1;
-
--- DESCRIBE word_count_filtered;
--- If you can figure out how to insert MerchantID into Mongo as a BSON ObjectID, we can use this code to insert
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
--- STORE word_count_filtered INTO '$OUTPUT' USING PigStorage('\t');
--- DESCRIBE output_data;
+
 -- DUMP output_data;
 

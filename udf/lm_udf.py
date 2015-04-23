@@ -1,6 +1,5 @@
 from datetime import datetime
 import re
-#from nltk.corpus import stopwords
 
 stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "ain't", 
     "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", 
@@ -69,6 +68,8 @@ def text_strip(mongo_post_text):
         word = word.lower()
         if len(word) < 3:
             continue
+        if len(word) > 16:
+            continue
         if word.find('http') != -1:
             continue
         if word[0] == '#' or word[0] == '@':
@@ -117,3 +118,18 @@ def map_output(arg0):
             _4s_count = int(elem[3])
 
     return {'FB': fb_count, 'IG': ig_count, 'TW': tw_count, '4S': _4s_count}
+
+#FIXME: make this work - currently doesnt
+@outputSchema('object_id:bytearray')
+def to_object_id(arg):
+    return arg
+
+
+
+
+
+
+
+
+
+
