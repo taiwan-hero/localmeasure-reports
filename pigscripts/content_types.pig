@@ -33,6 +33,8 @@ split_posts = FOREACH posts GENERATE id, kind,
         CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
+split_posts = FILTER split_posts BY post_month == '2015Mar';
+
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
                         active_split_places::place_name AS place_name, split_posts::id AS post_id, split_posts::source AS source,
@@ -45,7 +47,7 @@ places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COU
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
                             group::kind AS kind, kind_count;
-places_posts_flattened = FILTER places_posts_flattened BY post_month == '2015Mar';
+
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month, kind);
 
