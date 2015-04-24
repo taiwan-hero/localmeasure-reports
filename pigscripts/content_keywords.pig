@@ -34,7 +34,7 @@ split_posts = FOREACH posts GENERATE id, text,
 split_posts = FILTER split_posts BY month == '$MONTH';
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
-places_posts_distinct = FOREACH places_posts_joined GENERATE merchant_id::merchant_id AS merchant_id, active_split_places::place_name AS place_name, split_posts::id AS post_id, 
+places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, active_split_places::place_name AS place_name, split_posts::id AS post_id, 
                         split_posts::month AS post_month, split_posts::text AS text, split_posts::source as source;
 
 places_posts_distinct = DISTINCT places_posts_distinct;
