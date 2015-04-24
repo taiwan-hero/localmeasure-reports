@@ -43,9 +43,11 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 audits_filtered = FILTER audits BY (type MATCHES 'like' OR type MATCHES 'reply');
-audits_joined = JOIN audits_filtered BY subject#'origin_id', places_posts_distinct BY post_id;
+audits_filtered = FOREACH audits GENERATE type, created_at, actor#'label' AS user, subject#'origin_id' AS post_id;
 
-audits_monthly = FOREACH audits_joined GENERATE audits_filtered::type AS type, audits_filtered::actor#'label' AS user,
+audits_joined = JOIN audits_filtered BY post_id, places_posts_distinct BY post_id;
+
+audits_monthly = FOREACH audits_joined GENERATE audits_filtered::type AS type, audits_filtered::user AS user,
                 CONCAT(SUBSTRING(audits_filtered::created_at, 24, 28), SUBSTRING(audits_filtered::created_at, 4, 7)) AS month,
                 places_posts_distinct::place_name AS place_name, places_posts_distinct::merchant_id AS merchant_id;
 
@@ -54,7 +56,7 @@ audits_grouped = GROUP audits_monthly BY (merchant_id, place_name, month, user, 
 audits_grouped_counted = FOREACH audits_grouped GENERATE FLATTEN(group), COUNT(audits_monthly) AS audit_count_for_month;
 
 audits_grouped_flattened = FOREACH audits_grouped_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name,
-                            group::month AS month, group::type AS type, group::user AS user, audit_count_for_month;
+                            group::month AS month, group::user AS user, group::type AS type, audit_count_for_month;
 
 audits_flattened_regrouped = GROUP audits_grouped_flattened BY (merchant_id, place_name, month, user);
 
@@ -64,6 +66,5 @@ output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, gr
                 lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
                             lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
 
--- DUMP audits_grouped_counted;
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions_users'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
