@@ -53,14 +53,14 @@ places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_i
                             group::word AS word, group::source AS source, word_count;
 
 -- group again to place all sources and counts on same row
-places_posts_regrouped = GROUP places_posts_more_than_once BY (merchant_id, place_name, post_month, word);
+places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month, word);
 
 -- now use a UDF to format the outp
-output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_more_than_once;
+output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
 
 output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
-                            group::word AS word, lm_udf.map_keyword_source_counts(places_posts_more_than_once) AS counts,
-                            lm_udf.sum_source_counts(places_posts_more_than_once) AS total;
+                            group::word AS word, lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts,
+                            lm_udf.sum_source_counts(places_posts_flattened) AS total;
 
 output_data = FILTER output_data BY total > 1;
 
