@@ -93,7 +93,7 @@ def get_month(mongo_date):
 def map_keyword_source_counts(arg):
     data = {'FB': 0, 'IG': 0, 'TW': 0, '4S': 0}
     for elem in arg:
-        data[str(elem[4])] = int(elem[3])
+        data[str(elem[4])] = int(elem[5])
 
     return data
 
@@ -102,14 +102,14 @@ def map_keyword_source_counts(arg):
 def sum_source_counts(arg):
     total = 0
     for elem in arg:
-        total = total + int(elem[3])    
+        total = total + int(elem[5])    
 
     return total
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
-def map_keyword_kind_counts(arg):
-    data = {'photo': 0, 'video': 0, 'text': 0, 'review': 0}
+def map_kind_counts(arg):
+    data = {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}
     for elem in arg:
         data[str(elem[3])] = int(elem[4])
 
