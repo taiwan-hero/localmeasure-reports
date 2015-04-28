@@ -44,18 +44,34 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
 
 places_posts_distinct = DISTINCT places_posts_distinct;
 
-audits_filtered = FILTER audits BY (type MATCHES 'like' OR type MATCHES 'reply');
-audits_filtered = FOREACH audits GENERATE type, created_at, actor#'label' AS user, subject#'origin_id' AS post_id;
+audits_filtered = FILTER audits BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag');
+audits_filtered = FOREACH audits_filtered GENERATE type, CONCAT(SUBSTRING(created_at, 24, 28), SUBSTRING(created_at, 4, 7)) AS month,
+                    actor#'label' AS user, subject#'origin_id' AS post_id;
+audits_filtered = FILTER audits_filtered BY month == '$MONTH';
+
+-- follows reference posters. we can still assign source info by first two chars of poster_id
+audits_follows = FILTER audits BY (type MATCHES 'follow');
+follows = FOREACH audits_follows GENERATE type, CONCAT(SUBSTRING(created_at, 24, 28), SUBSTRING(created_at, 4, 7)) AS month,
+                    actor#'label' AS user, subject#'origin_id' AS poster_id;
+follows = FILTER follows BY month == '$MONTH';
 
 audits_joined = JOIN audits_filtered BY post_id, places_posts_distinct BY post_id;
 
-audits_monthly = FOREACH audits_joined GENERATE audits_filtered::type AS type, audits_filtered::user AS user, SUBSTRING(places_posts_distinct::post_id, 0, 2) AS source,
-                CONCAT(SUBSTRING(audits_filtered::created_at, 24, 28), SUBSTRING(audits_filtered::created_at, 4, 7)) AS month,
+audits_monthly = FOREACH audits_joined GENERATE audits_filtered::type AS type, audits_filtered::user AS user, 
+                SUBSTRING(places_posts_distinct::post_id, 0, 2) AS source, month,
                 places_posts_distinct::place_name AS place_name, places_posts_distinct::merchant_id AS merchant_id;
 
-audits_grouped = GROUP audits_monthly BY (merchant_id, place_name, month, user, source, type);
+-- HACKTASTIC: join follows to places via USER handles. 
+places_users = FOREACH audits_monthly GENERATE user, place_name, merchant_id;
+follows_places_joined = JOIN follows BY user, places_users BY user;
+follows_places_users = FOREACH follows_places_joined GENERATE follows::type AS type, follows::user AS user,
+                        follows::source AS source, follows::month AS month, places_users::place_name AS place_name, places_users::merchant_id AS merchant_id;
 
-audits_grouped_counted = FOREACH audits_grouped GENERATE FLATTEN(group), COUNT(audits_monthly) AS audit_count_for_month;
+interactions_all = UNION audits_monthly, follows_places_users;
+
+audits_grouped = GROUP interactions_all BY (merchant_id, place_name, month, user, source, type);
+
+audits_grouped_counted = FOREACH audits_grouped GENERATE FLATTEN(group), COUNT(interactions_all) AS audit_count_for_month;
 
 audits_grouped_flattened = FOREACH audits_grouped_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name,
                             group::month AS month, group::user AS user, group::source AS source, group::type AS type, audit_count_for_month;
