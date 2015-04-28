@@ -84,5 +84,5 @@ output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, gr
                 lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
                             lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions'
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions_all'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
