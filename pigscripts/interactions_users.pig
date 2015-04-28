@@ -65,7 +65,8 @@ audits_monthly = FOREACH audits_joined GENERATE audits_filtered::type AS type, a
 places_users = FOREACH audits_monthly GENERATE user, place_name, merchant_id;
 follows_places_joined = JOIN follows BY user, places_users BY user;
 follows_places_users = FOREACH follows_places_joined GENERATE follows::type AS type, follows::user AS user,
-                        follows::source AS source, follows::month AS month, places_users::place_name AS place_name, places_users::merchant_id AS merchant_id;
+                        SUBSTRING(follows::poster_id, 0, 2) AS source, follows::month AS month, 
+                        places_users::place_name AS place_name, places_users::merchant_id AS merchant_id;
 
 interactions_all = UNION audits_monthly, follows_places_users;
 
