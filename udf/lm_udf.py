@@ -128,11 +128,15 @@ def sum_kind_counts(arg):
 @outputSchema('counts:map[]')
 def map_interaction_counts(arg):
     print arg
-    data = {'like': 0, 'reply': 0}
-    for elem in arg:
-        data[str(elem[4])] = int(elem[5])
+    interactions = {'FB': {'like': 0, 'reply': 0}, 
+                    'IG': {'like': 0, 'reply': 0}, 
+                    'TW': {'like': 0, 'reply': 0}, 
+                    '4S': {'like': 0, 'reply': 0}}
 
-    return data
+    for elem in arg:
+        interactions[str(elem[4])][str(elem[5])] = int(elem[6])
+
+    return interactions
 
 #takes same input as above and returns summed counts
 @outputSchema('total:int')
