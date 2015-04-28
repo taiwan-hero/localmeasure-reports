@@ -144,7 +144,7 @@ def sum_interaction_counts(arg):
     print arg
     total = 0
     for elem in arg:
-        total = total + int(elem[5])   
+        total = total + int(elem[6])   
 
     return total
 
