@@ -109,9 +109,13 @@ def sum_source_counts(arg):
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_kind_counts(arg):
-    data = {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}
+    data = {'FB': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            'IG': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            'TW': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
+
     for elem in arg:
-        data[str(elem[3])] = int(elem[4])
+        data[str(elem[4])][str(elem[5])] = int(elem[6])
 
     return data
 
@@ -120,7 +124,7 @@ def map_kind_counts(arg):
 def sum_kind_counts(arg):
     total = 0
     for elem in arg:
-        total = total + int(elem[4])   
+        total = total + int(elem[5])   
 
     return total
 

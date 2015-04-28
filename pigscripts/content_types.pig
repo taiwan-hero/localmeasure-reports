@@ -37,30 +37,31 @@ split_posts = FILTER split_posts BY month == '$MONTH';
 
 places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
-                        active_split_places::place_name AS place_name, split_posts::id AS post_id, split_posts::source AS source,
-                        split_posts::month AS post_month, split_posts::kind AS kind;
+                        active_split_places::place_name AS place_name, split_posts::id AS post_id, 
+                        split_posts::month AS post_month, split_posts::source AS source, split_posts::kind AS kind;
 places_posts_distinct = DISTINCT places_posts_distinct;
 
-places_posts_counted = GROUP places_posts_distinct BY (merchant_id, place_name, post_month, kind);
+places_posts_counted = GROUP places_posts_distinct BY (merchant_id, place_name, post_month, source, kind);
 places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(places_posts_distinct) AS kind_count;
 
 -- flatten the groupings again
 places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
-                            group::kind AS kind, kind_count;
+                            group::source AS source, group::kind AS kind, kind_count;
 
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month);
 
--- now use a UDF to format the outp
+-- first flatten the group again, in preparation for insertion into Mongo
 output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
 
+-- the alias
 output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
                             lm_udf.map_kind_counts(places_posts_flattened) AS counts,
                             lm_udf.sum_kind_counts(places_posts_flattened) AS total;
 
 output_data = FILTER output_data BY total > 0;
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.kinds'
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.content_types'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
 -- DUMP places_posts_counted;

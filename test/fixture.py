@@ -116,6 +116,10 @@ if __name__ == '__main__':
     create_post('TW-oo', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', 'Pauls frog is overweight', 'text')
 
 
+'''
+db.audits.find({"actor.label":"Daniela Aravena", "type":{$in: ["like","reply"]},"created_at":{$gt:ISODate("2015-03-01T00:00:00.000Z"), $lt:ISODate("2015-04-01T00:00:00.000Z")}}).count()
+'''
+
 
 
 
