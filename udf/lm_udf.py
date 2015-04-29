@@ -132,10 +132,10 @@ def sum_kind_counts(arg):
 @outputSchema('counts:map[]')
 def map_interaction_counts(arg):
     print arg
-    interactions = {'FB': {'like': 0, 'reply': 0}, 
-                    'IG': {'like': 0, 'reply': 0}, 
-                    'TW': {'like': 0, 'reply': 0}, 
-                    '4S': {'like': 0, 'reply': 0}}
+    interactions = {'FB': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
+                    'IG': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
+                    'TW': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
+                    '4S': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}}
 
     for elem in arg:
         interactions[str(elem[4])][str(elem[5])] = int(elem[6])
