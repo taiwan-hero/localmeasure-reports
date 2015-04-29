@@ -76,6 +76,7 @@ audits_monthly =    FOREACH audits_joined GENERATE interactions::type AS type,
 
 -- HACKTASTIC: join follows to places via USER handles. First, get places and users
 places_users =              FOREACH audits_monthly GENERATE user, place_name, merchant_id;
+places_users =              DISTINCT places_users;
 
 -- Next, join places and users 
 follows_places_joined =     JOIN follows BY user, places_users BY user;
@@ -114,6 +115,6 @@ output_data =               FOREACH output_data GENERATE group::merchant_id AS m
                                                          lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
                                                          lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
 
-STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions_all'
+STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions'
                             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
