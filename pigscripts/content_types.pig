@@ -54,7 +54,8 @@ places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_i
                                                                group::place_name AS place_name, 
                                                                group::post_month AS post_month, 
                                                                group::source AS source, 
-                                                               group::kind AS kind, kind_count;
+                                                               group::kind AS kind, 
+                                                               kind_count;
 
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month);

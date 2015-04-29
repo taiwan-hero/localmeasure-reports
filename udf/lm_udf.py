@@ -119,7 +119,7 @@ def map_kind_counts(arg):
             '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
 
     for elem in arg:
-        data[str(elem[4])][str(elem[5])] = int(elem[6])
+        data[str(elem[3])][str(elem[4])] = int(elem[5])
 
     return data
 
