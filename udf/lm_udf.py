@@ -50,8 +50,7 @@ def is_expired(expires_at):
 
 @outputSchema('timestamp:int')
 def time_as_timestamp(in_time):
-    time = datetime.fromtimestamp(in_time/1000)
-    return time.total_seconds()
+    return int(in_time/1000)
 
 #removes [] chars from venue_id array
 @outputSchema('venue_ids:chararray')
