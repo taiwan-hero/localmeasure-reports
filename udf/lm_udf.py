@@ -48,6 +48,11 @@ def is_expired(expires_at):
     else:
         return 0
 
+@outputSchema('timestamp:int')
+def time_as_timestamp(in_time):
+    time = datetime.fromtimestamp(in_time/1000)
+    return time.total_seconds()
+
 #removes [] chars from venue_id array
 @outputSchema('venue_ids:chararray')
 def venue_id_strip(mongo_venue_id_str):

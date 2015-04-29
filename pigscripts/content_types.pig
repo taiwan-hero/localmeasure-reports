@@ -72,7 +72,7 @@ output_data =           FOREACH output_data GENERATE group::merchant_id AS merch
 
 output_data =           FILTER output_data BY total > 0;
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.content_types'
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.content'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
 
