@@ -17,19 +17,20 @@ merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants'
     USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
 
 -- Filter off Expired merchants, joining places to get active places
-merchants2 = FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
-active_merchants = FILTER merchants2 BY expiry == 0;
-active_places = JOIN places BY merchant_id, active_merchants BY id;
+merchants2 =            FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
+active_merchants =      FILTER merchants2 BY expiry == 0;
+active_places =         JOIN places BY merchant_id, active_merchants BY id;
 
 -- Strip off the leading [] chars in the venue_id array. This shouldn't be necessary with Mongo loader then flatten venue_ids to a row each.
-active_split_places = FOREACH active_places GENERATE active_merchants::id AS merchant_id, places::name AS place_name, 
-                        FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
+active_split_places =   FOREACH active_places GENERATE active_merchants::id AS merchant_id, places::name AS place_name, 
+                                                    FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
 
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
-split_posts = FOREACH posts GENERATE id, text, 
-        SUBSTRING(id, 0, 2) AS source,
-        CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
-        FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
+split_posts =           FOREACH posts GENERATE id, 
+                                                text, 
+                                                SUBSTRING(id, 0, 2) AS source,
+                                                CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
+                                                FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
 split_posts = FILTER split_posts BY month == '$MONTH';
 
