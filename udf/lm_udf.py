@@ -48,6 +48,13 @@ def is_expired(expires_at):
     else:
         return 0
 
+@outputSchema('time_diff:int')
+def time_diff(start_time_str, end_time_str):
+    start_time = datetime.strptime(str(start_time_str), "%a %b %d %H:%M:%S %Z %Y")
+    end_time = datetime.strptime(str(end_time_str), "%a %b %d %H:%M:%S %Z %Y")
+
+    return int(end_time - start_time)
+
 @outputSchema('timestamp:int')
 def time_as_timestamp(in_time):
     return int(in_time/1000)
