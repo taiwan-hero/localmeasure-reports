@@ -92,28 +92,22 @@ interactions_all =          UNION audits_monthly, follows_places_users;
 
 audits_grouped =            GROUP interactions_all BY (merchant_id, place_name, month, user, source, type);
 
-audits_grouped_counted =    FOREACH audits_grouped GENERATE FLATTEN(group), 
+audits_grouped_flattened =    FOREACH audits_grouped GENERATE group.merchant_id AS merchant_id, 
+                                                            group.place_name AS place_name,
+                                                            group.month AS month, 
+                                                            group.user AS user, 
+                                                            group.source AS source, 
+                                                            group.type AS type, 
                                                             COUNT(interactions_all) AS audit_count_for_month;
-
-audits_grouped_flattened =  FOREACH audits_grouped_counted GENERATE group::merchant_id AS merchant_id, 
-                                                                   group::place_name AS place_name,
-                                                                   group::month AS month, 
-                                                                   group::user AS user, 
-                                                                   group::source AS source, 
-                                                                   group::type AS type, 
-                                                                   audit_count_for_month;
 
 audits_flattened_regrouped = GROUP audits_grouped_flattened BY (merchant_id, place_name, month, user);
 
-output_data =               FOREACH audits_flattened_regrouped GENERATE FLATTEN(group), 
-                                                                        audits_grouped_flattened;
-
-output_data =               FOREACH output_data GENERATE group::merchant_id AS merchant_id, 
-                                                         group::place_name AS place_name, 
-                                                         group::month AS month, 
-                                                         group::user AS user,
-                                                         lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
-                                                         lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
+output_data =               FOREACH audits_flattened_regrouped GENERATE group.merchant_id AS merchant_id, 
+                                                                        group.place_name AS place_name, 
+                                                                        group.month AS month, 
+                                                                        group.user AS user,
+                                                                        lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
+                                                                        lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
 
 STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions'
                             USING com.mongodb.hadoop.pig.MongoInsertStorage('');

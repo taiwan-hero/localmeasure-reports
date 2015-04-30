@@ -46,30 +46,22 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 places_posts_counted =  GROUP places_posts_distinct BY (merchant_id, place_name, post_month, source, kind);
-places_posts_counted =  FOREACH places_posts_counted GENERATE FLATTEN(group), 
+places_posts_flattened =  FOREACH places_posts_counted GENERATE group.merchant_id AS merchant_id, 
+                                                               group.place_name AS place_name, 
+                                                               group.post_month AS post_month, 
+                                                               group.source AS source, 
+                                                               group.kind AS kind,  
                                                               COUNT(places_posts_distinct) AS kind_count;
-
--- flatten the groupings again
-places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, 
-                                                               group::place_name AS place_name, 
-                                                               group::post_month AS post_month, 
-                                                               group::source AS source, 
-                                                               group::kind AS kind, 
-                                                               kind_count;
 
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month);
 
 -- first flatten the group again, in preparation for insertion into Mongo
-output_data =           FOREACH places_posts_regrouped GENERATE FLATTEN(group), 
-                                                                places_posts_flattened;
-
--- the alias
-output_data =           FOREACH output_data GENERATE group::merchant_id AS merchant_id, 
-                                                     group::place_name AS place_name, 
-                                                     group::post_month AS post_month, 
-                                                     lm_udf.map_kind_counts(places_posts_flattened) AS counts,
-                                                     lm_udf.sum_kind_counts(places_posts_flattened) AS total;
+output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_id AS merchant_id, 
+                                                                group.place_name AS place_name, 
+                                                                group.post_month AS post_month, 
+                                                                lm_udf.map_kind_counts(places_posts_flattened) AS counts,
+                                                                lm_udf.sum_kind_counts(places_posts_flattened) AS total;
 
 output_data =           FILTER output_data BY total > 0;
 

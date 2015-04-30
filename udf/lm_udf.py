@@ -48,6 +48,8 @@ def is_expired(expires_at):
     else:
         return 0
 
+#helperschema that accepts dates in string format: [Tue Dec 22 12:05:21 EST 2015]
+#then outputs an integer of their difference
 @outputSchema('time_diff:int')
 def time_diff(start_time_str, end_time_str):
     start_time = datetime.strptime(str(start_time_str), "%a %b %d %H:%M:%S %Z %Y")
