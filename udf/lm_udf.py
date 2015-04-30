@@ -1,5 +1,5 @@
 from datetime import datetime
-import re
+from string import maketrans
 
 stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "ain't", 
     "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", 
@@ -79,6 +79,8 @@ def text_strip(mongo_post_text):
     output_text = ''
     for word in mongo_post_text.split(" "):
         word = word.lower()
+        word = word.translate(maketrans("",""), '.,!?:;')
+
         if len(word) < 3:
             continue
         if len(word) > 16:
@@ -104,7 +106,10 @@ def get_month(mongo_date):
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_keyword_source_counts(arg):
-    data = {'FB': 0, 'IG': 0, 'TW': 0, '4S': 0}
+    data = {'FB': 0, 
+            'IG': 0, 
+            'TW': 0, 
+            '4S': 0}
     for elem in arg:
         data[str(elem[4])] = int(elem[5])
 

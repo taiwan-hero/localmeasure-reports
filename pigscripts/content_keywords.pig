@@ -32,36 +32,48 @@ split_posts =           FOREACH posts GENERATE id,
                                                 CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
                                                 FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
-split_posts = FILTER split_posts BY month == '$MONTH';
+split_posts =           FILTER split_posts BY month == '$MONTH';
 
-places_posts_joined = JOIN active_split_places BY venue_id, split_posts BY venue_id;
-places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, active_split_places::place_name AS place_name, split_posts::id AS post_id, 
-                        split_posts::month AS post_month, split_posts::text AS text, split_posts::source as source;
+places_posts_joined =   JOIN active_split_places BY venue_id, split_posts BY venue_id;
+
+places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
+                                                             active_split_places::place_name AS place_name, 
+                                                             split_posts::id AS post_id, 
+                                                             split_posts::month AS post_month, 
+                                                             split_posts::text AS text, 
+                                                             split_posts::source as source;
 
 places_posts_distinct = DISTINCT places_posts_distinct;
 
-split_text_flat = FOREACH places_posts_distinct GENERATE merchant_id, place_name, post_month, source,
-        FLATTEN(TOKENIZE(lm_udf.text_strip(text))) AS word;
+-- Use a UDF to strip a bunch of unnecessary and irrelevant words out of the text, then put each word on its own row
+split_text_flat =       FOREACH places_posts_distinct GENERATE merchant_id, 
+                                                               place_name, 
+                                                               post_month, 
+                                                               source,
+                                                               FLATTEN(TOKENIZE(lm_udf.text_strip(text))) AS word;
 
-split_text_flat = FILTER split_text_flat BY word != '';
+split_text_flat =       FILTER split_text_flat BY word != '';
 
 -- group to generate the counts
-places_posts_counted = GROUP split_text_flat BY (merchant_id, place_name, post_month, source, word);
-places_posts_counted = FOREACH places_posts_counted GENERATE FLATTEN(group), COUNT(split_text_flat) AS word_count;
+places_posts_counted =  GROUP split_text_flat BY (merchant_id, place_name, post_month, source, word);
 
--- flatten the groupings again
-places_posts_flattened = FOREACH places_posts_counted GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
-                            group::word AS word, group::source AS source, word_count;
+places_posts_flattened =  FOREACH places_posts_counted GENERATE group.merchant_id AS merchant_id, 
+                                                               group.place_name AS place_name, 
+                                                               group.post_month AS post_month, 
+                                                               group.word AS word, 
+                                                               group.source AS source,
+                                                               COUNT(split_text_flat) AS word_count;
 
 -- group again to place all sources and counts on same row
 places_posts_regrouped = GROUP places_posts_flattened BY (merchant_id, place_name, post_month, word);
 
 -- now use a UDF to format the outp
-output_data = FOREACH places_posts_regrouped GENERATE FLATTEN(group), places_posts_flattened;
-
-output_data = FOREACH output_data GENERATE group::merchant_id AS merchant_id, group::place_name AS place_name, group::post_month AS post_month, 
-                            group::word AS word, lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts,
-                            lm_udf.sum_source_counts(places_posts_flattened) AS total;
+output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_id AS merchant_id, 
+                                                                group.place_name AS place_name, 
+                                                                group.post_month AS post_month, 
+                                                                group.word AS word, 
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts,
+                                                                lm_udf.sum_source_counts(places_posts_flattened) AS total;
 
 output_data = FILTER output_data BY total > 1;
 

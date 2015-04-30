@@ -62,9 +62,5 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
 
 output_data =           FILTER output_data BY total > 0;
 
--- STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.posters'
---              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
-
-DUMP output_data;
-
-
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.posters'
+             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
