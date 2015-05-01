@@ -6,8 +6,8 @@ REGISTER $JARFILES/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER '$LM_UDF/lm_udf.py' using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
 posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
-    USING com.mongodb.hadoop.pig.MongoLoader('post_time:chararray, secondary_venue_ids:chararray, text:chararray', '') 
-    AS (post_time:chararray, secondary_venue_ids:chararray, text:chararray); 
+    USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray', 'id') 
+    AS (id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray); 
 
 places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
     USING com.mongodb.hadoop.pig.MongoLoader('name:chararray, merchant_id:chararray, venue_ids:chararray', '')
@@ -26,8 +26,7 @@ active_split_places =   FOREACH active_places GENERATE active_merchants::id AS m
                                                     FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
 
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
-split_posts =           FOREACH posts GENERATE id, 
-                                                text, 
+split_posts =           FOREACH posts GENERATE text, 
                                                 SUBSTRING(id, 0, 2) AS source,
                                                 CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
                                                 FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
