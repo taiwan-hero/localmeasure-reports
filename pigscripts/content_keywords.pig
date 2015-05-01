@@ -6,12 +6,12 @@ REGISTER $JARFILES/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER '$LM_UDF/lm_udf.py' using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
 posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
-    USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray', 'id') 
-    AS (id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray); 
+    USING com.mongodb.hadoop.pig.MongoLoader('post_time:chararray, secondary_venue_ids:chararray, text:chararray', '') 
+    AS (post_time:chararray, secondary_venue_ids:chararray, text:chararray); 
 
 places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
-    USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray', 'id')
-    AS (id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray);
+    USING com.mongodb.hadoop.pig.MongoLoader('name:chararray, merchant_id:chararray, venue_ids:chararray', '')
+    AS (name:chararray, merchant_id:chararray, venue_ids:chararray);
 
 merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants'
     USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
@@ -38,7 +38,6 @@ places_posts_joined =   JOIN active_split_places BY venue_id, split_posts BY ven
 
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::merchant_id AS merchant_id, 
                                                              active_split_places::place_name AS place_name, 
-                                                             split_posts::id AS post_id, 
                                                              split_posts::month AS post_month, 
                                                              split_posts::text AS text, 
                                                              split_posts::source as source;
