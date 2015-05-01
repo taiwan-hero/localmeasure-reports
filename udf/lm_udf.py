@@ -99,7 +99,7 @@ def text_strip(mongo_post_text):
 #retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
 @outputSchema('month:chararray')
 def get_month(mongo_date):
-    month = datetime.fromtimestamp(mongo_date/1000)
+    month = datetime.strptime(str(mongo_date), "%a %b %d %H:%M:%S %Z %Y")
 
     return month.strftime('%Y%m')
 
