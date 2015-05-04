@@ -54,21 +54,18 @@ def create_post(post_id, secondary_venue_ids, post_time, text, kind):
                                 'text': text, 
                                 'kind': kind})
 
-def create_audit(category, audit_type, merchant_id, audit_time, user_id, user_name):
+def create_audit(category, audit_type, merchant_id, audit_time, user_name, post_id):
     created_at = datetime.datetime.strptime(audit_time, "%d/%m/%y %H:%M")
     return db.audits.insert_one({'category': category, 
                                 'type': audit_type, 
                                 'merchant_id': merchant_id, 
                                 'created_at': created_at, 
                                 'actor': {'type': 'user', 
-                                            'object_id': user_id, 
+                                            'object_id': 'blah', 
                                             'label': user_name},
-                                'references': {'type': 'user', 
-                                            'object_id': user_id, 
-                                            'label': user_name},
-                                'subject': {'type': 'user', 
-                                            'object_id': user_id, 
-                                            'label': user_name}
+                                'subject': {'type': 'post', 
+                                            'origin_id': post_id, 
+                                            'label': 'blah'}
                                 })
 
 def clear_all_merchants():
@@ -115,22 +112,14 @@ if __name__ == '__main__':
     create_post('IG-nn', ['IG-2', 'IG-22', 'IG-222'], '05/04/15 17:30', 'the quick brown fox jumped over the lazy dog', 'photo')
     create_post('TW-oo', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', 'Pauls frog is overweight', 'text')
 
-
+    create_audit('interaction', 'like', result.inserted_id, '21/01/15 16:40', 'Tim Tang', 'FB-aa')
+    create_audit('interaction', 'like', result.inserted_id, '21/01/15 16:45', 'Tim Tang', 'FB-aa')
+    create_audit('interaction', 'like', result.inserted_id, '21/01/15 16:50', 'Tim Tang', 'FB-aa')
+    create_audit('interaction', 'like', result.inserted_id, '21/01/15 17:40', 'Freddy Prinze Jr', 'IG-bb')
+    create_audit('interaction', 'like', result.inserted_id, '21/01/15 18:40', 'Tim Tang', 'TW-cc')
+    create_audit('interaction', 'like', result.inserted_id, '22/01/15 16:40', 'Freddy Prinze Jr', 'FB-dd')
+    create_audit('interaction', 'like', result.inserted_id, '22/01/15 17:40', 'Tim Tang', 'IG-hh')
+    create_audit('interaction', 'like', result.inserted_id, '22/01/15 18:40', 'Freddy Prinze Jr', 'TW-ii')
 '''
 db.audits.find({"actor.label":"Daniela Aravena", "type":{$in: ["like","reply"]},"created_at":{$gt:ISODate("2015-03-01T00:00:00.000Z"), $lt:ISODate("2015-04-01T00:00:00.000Z")}}).count()
 '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

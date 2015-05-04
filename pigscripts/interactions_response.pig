@@ -15,8 +15,6 @@ audits = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.audits'
 
 posts_timed =       FOREACH posts GENERATE id, post_time, lm_udf.get_month(post_time) AS month;
 
-posts_timed =       FILTER posts_timed BY month == '$MONTH';
-
 audits_timed =      FOREACH audits GENERATE type,
                                             created_at, 
                                             lm_udf.get_month(created_at) AS month,
@@ -24,22 +22,32 @@ audits_timed =      FOREACH audits GENERATE type,
                                             subject#'origin_id' AS post_id,
                                             merchant_id;
 
-audits_timed =      DISTINCT audits_timed;
+audits_timed =          DISTINCT audits_timed;
 
-audits_filtered =   FILTER audits_timed BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag' OR type MATCHES 'follow') AND (month == '$MONTH');
+audits_filtered =       FILTER audits_timed BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag' OR type MATCHES 'follow') AND (month == '$MONTH');
 
-audits_posts_joined = JOIN posts_timed BY id, audits_filtered BY post_id;
+audits_posts_joined =   JOIN posts_timed BY id, audits_filtered BY post_id;
 
-interactions =      FOREACH audits_posts_joined GENERATE posts_timed::id AS post_id,
+interactions =          FOREACH audits_posts_joined GENERATE posts_timed::id AS post_id,
                                                         lm_udf.time_diff(posts_timed::post_time, audits_filtered::created_at) AS response_time,
+                                                        audits_filtered::month AS month,
                                                         audits_filtered::user AS user,
                                                         audits_filtered::merchant_id AS merchant_id;
 
-response_time_by_user = GROUP interactions BY (merchant_id, user);
+post_interactions =     GROUP interactions BY (merchant_id, user, month, post_id);
 
-averages =          FOREACH response_time_by_user GENERATE interactions.merchant_id AS merchant_id, 
-                                                           interactions.user AS user, 
-                                                           AVG(interactions.response_time) AS average;
+min_time_interactions = FOREACH post_interactions GENERATE group.merchant_id AS merchant_id,
+                                                            group.user AS user,
+                                                            group.month AS month,
+                                                            group.post_id AS post_id,
+                                                            lm_udf.get_min_interaction_time(interactions) AS min_response_time;
+
+response_time_by_user = GROUP min_time_interactions BY (merchant_id, month, user);
+
+averages =              FOREACH response_time_by_user GENERATE group.merchant_id AS merchant_id, 
+                                                                group.month AS month,
+                                                                group.user AS user, 
+                                                                AVG(min_time_interactions.min_response_time) AS average;
 
 STORE averages           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.response_times'
-                            USING com.mongodb.hadoop.pig.MongoInsertStorage('');
+                           USING com.mongodb.hadoop.pig.MongoInsertStorage('');

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from string import maketrans
 
 stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "ain't", 
@@ -54,8 +54,9 @@ def is_expired(expires_at):
 def time_diff(start_time_str, end_time_str):
     start_time = datetime.strptime(str(start_time_str), "%a %b %d %H:%M:%S %Z %Y")
     end_time = datetime.strptime(str(end_time_str), "%a %b %d %H:%M:%S %Z %Y")
+    tdelta = end_time - start_time
 
-    return int(end_time - start_time)
+    return tdelta.seconds
 
 @outputSchema('timestamp:int')
 def time_as_timestamp(in_time):
@@ -79,7 +80,7 @@ def text_strip(mongo_post_text):
     output_text = ''
     for word in mongo_post_text.split(" "):
         word = word.lower()
-        word = word.translate(maketrans("",""), '.,!?:;')
+        #word = word.translate(maketrans("",""), '.,!?:;')
 
         if len(word) < 3:
             continue
@@ -101,7 +102,7 @@ def text_strip(mongo_post_text):
 def get_month(mongo_date):
     month = datetime.strptime(str(mongo_date), "%a %b %d %H:%M:%S %Z %Y")
 
-    return month.strftime('%Y%m')
+    return month.strftime('%Y%b')
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
@@ -191,6 +192,15 @@ def sum_poster_counts(arg):
         total = total + int(elem[4])   
 
     return total
+
+@outputSchema('min_interaction_time:int')
+def get_min_interaction_time(arg):
+    min_response_time = -1
+    for elem in arg:
+        if min_response_time == -1 or int(elem[1]) < min_response_time:
+            min_response_time = int(elem[1])
+    return min_response_time
+
 
 #FIXME: make this work - currently doesnt
 @outputSchema('object_id:bytearray')
