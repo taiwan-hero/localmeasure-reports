@@ -150,7 +150,6 @@ def sum_kind_counts(arg):
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_interaction_counts(arg):
-    print arg
     interactions = {'FB': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
                     'IG': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
                     'TW': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
@@ -164,7 +163,6 @@ def map_interaction_counts(arg):
 #takes same input as above and returns summed counts
 @outputSchema('total:int')
 def sum_interaction_counts(arg):
-    print arg
     total = 0
     for elem in arg:
         total = total + int(elem[6])   
