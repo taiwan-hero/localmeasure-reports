@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import pymongo
 import argparse
 import datetime
+import calendar
 from bson import ObjectId
 
 DESCRIPTION = 'validates the reports'
@@ -35,26 +36,42 @@ def setup():
 
 def validate_content(merchant_id, month):
     erroneous_reports = []
-    content_reports = metrics_db.content.find({})
+    content_reports = metrics_db.content.find({'merchant_id': merchant_id})
 
     for cr in content_reports:
-        calc_total = 0
-        for source in cr['counts']:
-            for content_type in cr['counts'][source]:
-                calc_total += cr['counts'][source][content_type]
+        places = db.places.find({'name': cr['place_name']})
+        venues = []
+        for place in places:
+            for venue in place['venue_ids']:
+                if venue not in venues:
+                    venues.append(venue)
 
-        if cr['total'] != calc_total:
-            print 'ERROR: {} / {} / {} does not have correct total'.format(cr['place_name'].encode('utf-8'), cr['total'], calc_total)
+        if not venues:
+            print 'no venues to query for this place name'
+            continue
 
-    venues = []
+        start = datetime.datetime.strptime(month + '01', "%Y%b%d")
+        end = datetime.datetime.strptime(month + '31', "%Y%b%d")
+
+        post_count = db.posts.find({'secondary_venue_ids': {'$in': venues}, 
+                                    'post_time': {'$gt': start, '$lt': end}}).count()
+
+        print 'posts found {} : {} at {}'.format(post_count, cr['total'], cr['place_name'])
+
+def find_all_mentions(merchant_id):
+    mentions = []
     places = db.places.find({'merchant_id': ObjectId(merchant_id)})
     for place in places:
-        for venue in place['venue_ids']:
-            if venue not in venues:
-                venues.append(venue)
+        for venue_id in place['venue_ids']:
+            venue = db.venues.find_one({'_id': venue_id})
+            if venue and 'type' in venue:
+                if venue['type'] == 'mention':
+                    mentions.append(venue['term'])
 
-    print venues
+    print '{}'.format(mentions)
 
 if __name__ == '__main__':
     setup()
-    validate_content(args.merchant_id, args.month)
+    find_all_mentions(args.merchant_id)
+
+

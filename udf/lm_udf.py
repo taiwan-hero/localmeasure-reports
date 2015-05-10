@@ -104,6 +104,13 @@ def get_month(mongo_date):
 
     return month.strftime('%Y%b')
 
+#retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
+@outputSchema('month:chararray')
+def get_day(mongo_date):
+    month = datetime.strptime(str(mongo_date), "%a %b %d %H:%M:%S %Z %Y")
+
+    return month.strftime('%Y%b%d')
+
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_keyword_source_counts(arg):
@@ -150,10 +157,10 @@ def sum_kind_counts(arg):
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_interaction_counts(arg):
-    interactions = {'FB': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
-                    'IG': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
-                    'TW': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}, 
-                    '4S': {'like': 0, 'reply': 0, 'tag': 0, 'follow': 0}}
+    interactions = {'FB': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
+                    'IG': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
+                    'TW': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
+                    '4S': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}}
 
     for elem in arg:
         interactions[str(elem[4])][str(elem[5])] = int(elem[6])
@@ -165,10 +172,15 @@ def map_interaction_counts(arg):
 def sum_interaction_counts(arg):
     total = 0
     for elem in arg:
-        total = total + int(elem[6])   
+        if str(elem[5]) != 'int':
+            total = total + int(elem[6])   
 
     return total
 
+@outputSchema('total:int')
+def unique_interaction_counts(arg):
+    
+    
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_poster_counts(arg):

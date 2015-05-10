@@ -65,12 +65,24 @@ audits_filtered =   FILTER audits_filtered BY month == '$MONTH';
 follows =           FILTER audits_filtered BY (type MATCHES 'follow');
 interactions =      FILTER audits_filtered BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag');
 
-audits_joined =     JOIN interactions BY post_id, places_posts_distinct BY post_id;
+-- here, we create a new type called 'int' for unique posts
+unique =            FILTER interactions BY (type MATCHES 'like' OR type MATCHES 'reply');
+unique =            FOREACH unique GENERATE 'int' AS type,
+                                            month,
+                                            user,
+                                            post_id,
+                                            source;
+unique =            DISTINCT unique;
 
-audits_monthly =    FOREACH audits_joined GENERATE interactions::type AS type, 
-                                                   interactions::user AS user, 
-                                                   interactions::source AS source, 
-                                                   interactions::month AS month,
+-- tack unique 'int' table onto usual interactions table
+int_all =           UNION interactions, unique;
+
+audits_joined =     JOIN int_all BY post_id, places_posts_distinct BY post_id;
+
+audits_monthly =    FOREACH audits_joined GENERATE int_all::type AS type, 
+                                                   int_all::user AS user, 
+                                                   int_all::source AS source, 
+                                                   int_all::month AS month,
                                                    places_posts_distinct::place_name AS place_name, 
                                                    places_posts_distinct::merchant_id AS merchant_id;
 
