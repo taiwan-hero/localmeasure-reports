@@ -70,8 +70,30 @@ def find_all_mentions(merchant_id):
 
     print '{}'.format(mentions)
 
+def find_all_handle_mentions(merchant_id):
+    mentions = []
+    merchant = db.merchants.find_one({'_id': ObjectId(merchant_id)})
+    if merchant and 'linked_accounts' in merchant:
+        if 'instagram' in merchant['linked_accounts']:
+            for ig in merchant['linked_accounts']['instagram']:
+                mentions.append(ig['name'])
+
+        if 'twitter' in merchant['linked_accounts']:
+            for tw in merchant['linked_accounts']['twitter']:
+                mentions.append(tw['name'])
+
+    print '{}'.format(mentions)
+    return mentions
+
+def get_mentions(merchant_id, mentions):
+    keyword_mentions = metrics_db.keywords.find({'merchant_id': merchant_id, 'word': {'$in': mentions}})
+    for km in keyword_mentions:
+        print '{} : {}'.format(km.word, km.total)
+
 if __name__ == '__main__':
     setup()
-    find_all_mentions(args.merchant_id)
+    mentions = find_all_handle_mentions(args.merchant_id)
+    counts = get_mentions(args.merchant_id, mentions)
+
 
 

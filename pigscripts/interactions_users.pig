@@ -61,6 +61,7 @@ audits_filtered =   FOREACH audits_filtered GENERATE type,
                                                      SUBSTRING(post_id, 0, 2) AS source;
 
 audits_filtered =   FILTER audits_filtered BY month == '$MONTH';
+audits_filtered =   DISTINCT audits_filtered;
 
 follows =           FILTER audits_filtered BY (type MATCHES 'follow');
 interactions =      FILTER audits_filtered BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag');
@@ -118,8 +119,7 @@ output_data =               FOREACH audits_flattened_regrouped GENERATE group.me
                                                                         group.place_name AS place_name, 
                                                                         group.month AS month, 
                                                                         group.user AS user,
-                                                                        lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts,
-                                                                        lm_udf.sum_interaction_counts(audits_grouped_flattened) AS total;
+                                                                        lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts;
 
 STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions'
                             USING com.mongodb.hadoop.pig.MongoInsertStorage('');

@@ -166,20 +166,6 @@ def map_interaction_counts(arg):
         interactions[str(elem[4])][str(elem[5])] = int(elem[6])
 
     return interactions
-
-#takes same input as above and returns summed counts
-@outputSchema('total:int')
-def sum_interaction_counts(arg):
-    total = 0
-    for elem in arg:
-        if str(elem[5]) != 'int':
-            total = total + int(elem[6])   
-
-    return total
-
-@outputSchema('total:int')
-def unique_interaction_counts(arg):
-    
     
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
