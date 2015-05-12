@@ -35,6 +35,8 @@ stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "
         "whose", "why", "will", "willing", "wish", "with", "within", "without", "won't", "wonder", "would", "wouldn't", "yes", "yet", "you", "you'd", "you'll", "you're", 
         "you've", "your", "yours", "yourself", "yourselves", "zero"])
 
+punc = set(['.',',','!','?',':',';','"', "'"])
+
 @outputSchema('is_expired:int')
 def is_expired(expires_at):
     #Tue Dec 22 12:05:21 EST 2015
@@ -81,7 +83,8 @@ def text_strip(mongo_post_text):
     for word in mongo_post_text.split(" "):
         word = word.lower()
         #word = word.translate(maketrans("",""), '.,!?:;')
-
+        if word[0] in punc:
+            word = word[1:]
         if len(word) < 3:
             continue
         if len(word) > 16:
