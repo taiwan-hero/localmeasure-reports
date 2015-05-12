@@ -70,10 +70,9 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
                                                                 group.place_name AS place_name, 
                                                                 group.post_month AS post_month, 
                                                                 group.word AS word, 
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts,
-                                                                lm_udf.sum_source_counts(places_posts_flattened) AS total;
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts;
 
-output_data = FILTER output_data BY total > 1;
+output_data = DISTINCT output_data;
 
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');

@@ -79,7 +79,7 @@ def venue_id_strip(mongo_venue_id_str):
 #returns space separated string of relevant words
 @outputSchema('text:chararray')
 def text_strip(mongo_post_text):
-    output_text = ''
+    output_text = []
     for word in mongo_post_text.split(" "):
         word = word.lower()
         #word = word.translate(maketrans("",""), '.,!?:;')
@@ -93,12 +93,9 @@ def text_strip(mongo_post_text):
             continue
         if word in stop_words:
             continue
-        if len(output_text) > 0:
-            output_text = output_text + ' ' + word
-        else:
-            output_text = word
 
-    return output_text
+        output_text.append(word)
+    return " ".join(output_text)
 
 #retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
 @outputSchema('month:chararray')
@@ -125,15 +122,6 @@ def map_keyword_source_counts(arg):
         data[str(elem[4])] = int(elem[5])
 
     return data
-
-#takes same input as above and returns summed counts
-@outputSchema('total:int')
-def sum_source_counts(arg):
-    total = 0
-    for elem in arg:
-        total = total + int(elem[5])    
-
-    return total
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
