@@ -89,6 +89,8 @@ def text_strip(mongo_post_text):
             continue
         if word[0] in punc:
             word = word[1:]
+        if word[len(word)-1] in punc:
+            word = word[:len(word)-2]
         if word.find('http') != -1:
             continue
         if word in stop_words:
