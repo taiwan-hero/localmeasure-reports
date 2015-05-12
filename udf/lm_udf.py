@@ -83,12 +83,12 @@ def text_strip(mongo_post_text):
     for word in mongo_post_text.split(" "):
         word = word.lower()
         #word = word.translate(maketrans("",""), '.,!?:;')
-        if word[0] in punc:
-            word = word[1:]
         if len(word) < 3:
             continue
         if len(word) > 16:
             continue
+        if word[0] in punc:
+            word = word[1:]
         if word.find('http') != -1:
             continue
         if word in stop_words:
