@@ -54,6 +54,14 @@ def create_post(post_id, secondary_venue_ids, post_time, text, kind):
                                 'text': text, 
                                 'kind': kind})
 
+def create_review(post_id, secondary_venue_ids, post_time, value):
+    posted_at = datetime.datetime.strptime(post_time, "%d/%m/%y %H:%M")
+    return db.posts.insert_one({'_id': post_id, 
+                                'secondary_venue_ids': secondary_venue_ids, 
+                                'post_time': posted_at, 
+                                'rating': {'value': value, 'scale': 5}, 
+                                'kind': 'review'})
+
 def create_audit(category, audit_type, merchant_id, audit_time, user_name, post_id):
     created_at = datetime.datetime.strptime(audit_time, "%d/%m/%y %H:%M")
     return db.audits.insert_one({'category': category, 
@@ -111,6 +119,11 @@ if __name__ == '__main__':
     create_post('FB-mm', ['FB-1', 'FB-11', 'FB-111'], '05/04/15 16:30', 'The cat sat on the mat', 'photo')
     create_post('IG-nn', ['IG-2', 'IG-22', 'IG-222'], '05/04/15 17:30', 'the quick brown fox jumped over the lazy dog', 'photo')
     create_post('TW-oo', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', 'Pauls frog is overweight', 'text')
+
+    create_review('FB-pp', ['FB-1', 'FB-11', 'FB-111'], '05/04/15 16:30', '2')
+    create_review('FB-qq', ['IG-2', 'IG-22', 'IG-222'], '05/04/15 17:30', '3')
+    create_review('FB-rr', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', '4')
+    create_review('FB-ss', ['TW-3', 'TW-33', 'TW-333'], '05/04/15 18:30', '4')
 
     create_audit('interaction', 'like', result.inserted_id, '21/01/15 16:40', 'Tim Tang', 'FB-aa')
     create_audit('interaction', 'like', result.inserted_id, '21/01/15 16:45', 'Tim Tang', 'FB-aa')

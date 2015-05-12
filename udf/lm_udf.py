@@ -82,7 +82,7 @@ def text_strip(mongo_post_text):
     output_text = []
     for word in mongo_post_text.split(" "):
         word = word.lower()
-        #word = word.translate(maketrans("",""), '.,!?:;')
+
         if len(word) < 3:
             continue
         if len(word) > 16:
@@ -90,13 +90,16 @@ def text_strip(mongo_post_text):
         if word[0] in punc:
             word = word[1:]
         if word[len(word)-1] in punc:
-            word = word[:len(word)-2]
+            word = word[:len(word)-1]
         if word.find('http') != -1:
             continue
         if word in stop_words:
             continue
+        if word in output_text:
+            continue
 
         output_text.append(word)
+
     return " ".join(output_text)
 
 #retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
@@ -114,16 +117,13 @@ def get_day(mongo_date):
     return month.strftime('%Y%b%d')
 
 #helper function to get aggregated PIG output ready for Mongo insertion
-@outputSchema('counts:map[]')
-def map_keyword_source_counts(arg):
-    data = {'FB': 0, 
-            'IG': 0, 
-            'TW': 0, 
-            '4S': 0}
+@outputSchema('count:int')
+def map_keyword_source_counts(arg, source):
+    count = 0
     for elem in arg:
-        data[str(elem[4])] = int(elem[5])
-
-    return data
+        if str(elem[4]) == source:
+            count = int(elem[5])
+    return count
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
@@ -190,6 +190,14 @@ def get_min_interaction_time(arg):
             min_response_time = int(elem[1])
     return min_response_time
 
+@outputSchema('counts:map[]')
+def map_review_counts(arg):
+    reviews = {'FB': {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0}}
+
+    for elem in arg:
+        reviews[str(elem[3])][str(elem[4])] = int(elem[5])
+
+    return reviews
 
 #FIXME: make this work - currently doesnt
 @outputSchema('object_id:bytearray')

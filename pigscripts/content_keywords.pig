@@ -32,6 +32,7 @@ split_posts =           FOREACH posts GENERATE text,
                                                 FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
 split_posts =           FILTER split_posts BY month == '$MONTH';
+split_posts =           FILTER split_posts BY text != '';
 
 places_posts_joined =   JOIN active_split_places BY venue_id, split_posts BY venue_id;
 
@@ -70,11 +71,21 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
                                                                 group.place_name AS place_name, 
                                                                 group.post_month AS post_month, 
                                                                 group.word AS word, 
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts;
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'FB') AS FB,
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'IG') AS IG,
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'TW') AS TW,
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, '4S') AS FS;
 
-output_data = DISTINCT output_data;
+output_data =           FILTER output_data BY (FB > 2 OR IG > 2 OR TW > 2 OR FS > 2);
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.keywords'
-             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
-
-
+STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.terms'
+                  USING com.mongodb.hadoop.pig.MongoUpdateStorage(
+                      '{merchant_id:"\$merchant_id", 
+                        place_name:"\$place_name", 
+                        post_month:"\$post_month", 
+                        word:"\$word"}',
+                      '{\$set:{FB:"\$FB", IG:"\$IG", TW:"\$TW", FS:"\$FS"}}',
+                      'merchant_id:chararray, place_name:chararray, post_month:chararray, word:chararray, FB:int, IG:int, TW:int, FS:int',
+                      '',
+                      '{unique:true, upsert:true}'
+                  );
