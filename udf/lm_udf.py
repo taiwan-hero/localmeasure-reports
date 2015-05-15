@@ -35,7 +35,7 @@ stop_words = set(["a's", "able", "about", "above", "according", "accordingly", "
         "whose", "why", "will", "willing", "wish", "with", "within", "without", "won't", "wonder", "would", "wouldn't", "yes", "yet", "you", "you'd", "you'll", "you're", 
         "you've", "your", "yours", "yourself", "yourselves", "zero"])
 
-punc = set(['.',',','!','?',':',';','"', "'"])
+punc = set(['.', ',', '!', '?', ':', ';', '"', "'", '$', '&', '%', '*', '(', ')', '_', '-'])
 
 @outputSchema('is_expired:int')
 def is_expired(expires_at):
@@ -91,6 +91,8 @@ def text_strip(mongo_post_text):
             word = word[1:]
         if word[len(word)-1] in punc:
             word = word[:len(word)-1]
+        if len(word) < 3:
+            continue
         if word.find('http') != -1:
             continue
         if word in stop_words:
