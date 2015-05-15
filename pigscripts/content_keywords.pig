@@ -79,13 +79,4 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
 output_data =           FILTER output_data BY (FB > 2 OR IG > 2 OR TW > 2 OR FS > 2);
 
 STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.terms'
-                  USING com.mongodb.hadoop.pig.MongoUpdateStorage(
-                      '{merchant_id:"\$merchant_id", 
-                        place_name:"\$place_name", 
-                        post_month:"\$post_month", 
-                        word:"\$word"}',
-                      '{\$set:{FB:"\$FB", IG:"\$IG", TW:"\$TW", FS:"\$FS"}}',
-                      'merchant_id:chararray, place_name:chararray, post_month:chararray, word:chararray, FB:int, IG:int, TW:int, FS:int',
-                      '',
-                      '{unique:true, upsert:true}'
-                  );
+             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
