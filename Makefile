@@ -8,10 +8,8 @@ run-keywords:
 
 develop:
 	mkdir -p hadoop-binaries
-	cd hadoop-binaries
-	wget http://archive.apache.org/dist/hadoop/common/hadoop-2.4.1/hadoop-2.4.1.tar.gz
-	wget https://archive.apache.org/dist/pig/pig-0.13.0/pig-0.13.0.tar.gz
-	tar xzf hadoop-2.4.1.tar.gz
-	tar xzf pig-0.13.0.tar.gz
-	cd ..
+	wget -P hadoop-binaries/ http://archive.apache.org/dist/hadoop/common/hadoop-2.4.1/hadoop-2.4.1.tar.gz
+	wget -P hadoop-binaries/ https://archive.apache.org/dist/pig/pig-0.13.0/pig-0.13.0.tar.gz
+	tar xzf hadoop-binaries/hadoop-2.4.1.tar.gz -C hadoop-binaries/ 
+	tar xzf hadoop-binaries/pig-0.13.0.tar.gz -C hadoop-binaries/
 	source exports.sh
