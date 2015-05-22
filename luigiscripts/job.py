@@ -47,6 +47,6 @@ if __name__ == '__main__':
     today = date.today()
     this_month = today.strftime('%Y%b')
     print this_month
-    _run_script(scripts['content'], this_month)
+    _run_script('~/localmeasure-reports/pigscripts/content_types.pig', this_month)
     #write a document
 
