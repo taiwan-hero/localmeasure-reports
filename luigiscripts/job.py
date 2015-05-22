@@ -35,7 +35,7 @@ def _run_script(script, month):
                 '-param', 'MONTH=2015May', 
                 '-f', 'pigscripts/content_reviews.pig']
 
-    call(cmd, stderr=open('~/reports_error','w'), stdout=open('~/reports_output','w'))
+    call(cmd)
 
 if __name__ == '__main__':
     _setup()
