@@ -8,8 +8,7 @@ import argparse
 print 'starting'
 
 args = None
-DB = None
-DB_PORT = None
+db = None
 reports_home = '~/localmeasure-reports'
 
 scripts = {'content':       reports_home+'/pigscripts/content_types.pig',
@@ -21,20 +20,18 @@ scripts = {'content':       reports_home+'/pigscripts/content_types.pig',
 
 def _setup():
     global args
-    global DB
-    global DB_PORT
+    global db
     
     parser = argparse.ArgumentParser(description='run a bunch of pig scripts')
     parser.add_argument('mongodb', help='db to connect to i.e. mongodb://127.0.0.1:27017')
     args = parser.parse_args()
     client = pymongo.MongoClient(args.mongodb)
     db = client.localmeasure_metrics
-    DB_PORT = args.db_port
 
 def _run_script(script, month):
 
     cmd = ['pig', '-x', 'local', 
-                '-param', 'DB=localhost',
+                '-param', 'DB=localhost:27017',
                 '-param', 'MONTH=2015May', 
                 '-f', 'pigscripts/content_reviews.pig']
 
