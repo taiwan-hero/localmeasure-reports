@@ -3,11 +3,11 @@ REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
 REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
-posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
+posts = LOAD 'mongodb://$DB/localmeasure.posts' 
         USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray', 'id') 
         AS (id:chararray, post_time:chararray);
 
-audits = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.audits' 
+audits = LOAD 'mongodb://$DB/localmeasure.audits' 
           USING com.mongodb.hadoop.pig.MongoLoader('merchant_id:chararray, created_at:chararray, type:chararray, subject:map[], actor:map[]', '') 
           AS (merchant_id:chararray, created_at:chararray, type:chararray, subject, actor);
 
@@ -47,5 +47,5 @@ averages =              FOREACH response_time_by_user GENERATE group.merchant_id
                                                                 group.user AS user, 
                                                                 AVG(min_time_interactions.min_response_time) AS average;
 
-STORE averages           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.response_times'
+STORE averages           INTO 'mongodb://$DB/localmeasure_metrics.response_times'
                            USING com.mongodb.hadoop.pig.MongoInsertStorage('');

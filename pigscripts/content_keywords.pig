@@ -3,15 +3,15 @@ REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
 REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
-posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
+posts = LOAD 'mongodb://$DB/localmeasure.posts' 
     USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray', 'id') 
     AS (id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray); 
 
-places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
+places = LOAD 'mongodb://$DB/localmeasure.places' 
     USING com.mongodb.hadoop.pig.MongoLoader('name:chararray, merchant_id:chararray, venue_ids:chararray', '')
     AS (name:chararray, merchant_id:chararray, venue_ids:chararray);
 
-merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants'
+merchants = LOAD 'mongodb://$DB/localmeasure.merchants'
     USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
 
 -- Filter off Expired merchants, joining places to get active places
@@ -76,5 +76,5 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
 
 output_data =           FILTER output_data BY (FB > 2 OR IG > 2 OR TW > 2 OR FS > 2);
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.terms'
+STORE output_data INTO 'mongodb://$DB/localmeasure_metrics.terms'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');

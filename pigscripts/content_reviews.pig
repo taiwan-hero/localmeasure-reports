@@ -3,15 +3,15 @@ REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
 REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
-posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
+posts = LOAD 'mongodb://$DB/localmeasure.posts' 
         USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating', 'id') 
         AS (id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating); 
 
-places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
+places = LOAD 'mongodb://$DB/localmeasure.places' 
          USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray', 'id') 
          AS (id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray);
 
-merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants' 
+merchants = LOAD 'mongodb://$DB/localmeasure.merchants' 
             USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
 
 merchants2 =                FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
@@ -65,6 +65,6 @@ output_data =               FOREACH reviews_flattened_regrouped GENERATE group.m
                                                                         group.month AS month, 
                                                                         lm_udf.map_review_counts(reviews_grouped_flattened) AS counts;
 
-STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.reviews'
+STORE output_data           INTO 'mongodb://$DB/localmeasure_metrics.reviews'
                             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 

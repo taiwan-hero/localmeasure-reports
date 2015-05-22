@@ -3,15 +3,15 @@ REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
 REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
-posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
+posts = LOAD 'mongodb://$DB/localmeasure.posts' 
     USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, kind:chararray', 'id') 
     AS (id:chararray, post_time:chararray, secondary_venue_ids:chararray, kind:chararray); 
 
-places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
+places = LOAD 'mongodb://$DB/localmeasure.places' 
     USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray', 'id') 
     AS (id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray);
 
-merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants' 
+merchants = LOAD 'mongodb://$DB/localmeasure.merchants' 
     USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
 
 merchants2 =            FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
@@ -63,7 +63,7 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
 
 output_data =           FILTER output_data BY total > 0;
 
-STORE output_data INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.content'
+STORE output_data INTO 'mongodb://$DB/localmeasure_metrics.content'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
 

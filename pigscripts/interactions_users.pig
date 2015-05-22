@@ -3,19 +3,19 @@ REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
 REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
-posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
+posts = LOAD 'mongodb://$DB/localmeasure.posts' 
         USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray', 'id') 
         AS (id:chararray, post_time:chararray, secondary_venue_ids:chararray); 
 
-places = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.places' 
+places = LOAD 'mongodb://$DB/localmeasure.places' 
          USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray', 'id') 
          AS (id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray);
 
-audits = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.audits' 
+audits = LOAD 'mongodb://$DB/localmeasure.audits' 
         USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, category:chararray, merchant_id:chararray, created_at:chararray, type:chararray, subject:map[], actor:map[]', 'id') 
         AS (id:chararray, category:chararray, merchant_id:chararray, created_at:chararray, type:chararray, subject, actor);
 
-merchants = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.merchants' 
+merchants = LOAD 'mongodb://$DB/localmeasure.merchants' 
             USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
 
 merchants2 =        FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
@@ -119,6 +119,6 @@ output_data =               FOREACH audits_flattened_regrouped GENERATE group.me
                                                                         group.user AS user,
                                                                         lm_udf.map_interaction_counts(audits_grouped_flattened) AS counts;
 
-STORE output_data           INTO 'mongodb://$DB:$DB_PORT/localmeasure_metrics.interactions'
+STORE output_data           INTO 'mongodb://$DB/localmeasure_metrics.interactions'
                             USING com.mongodb.hadoop.pig.MongoInsertStorage('');
 
