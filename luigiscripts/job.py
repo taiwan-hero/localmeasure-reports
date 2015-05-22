@@ -5,10 +5,9 @@ from datetime import date
 import pymongo
 import argparse
 
-print 'starting'
-
 args = None
 db = None
+db_metrics = None
 reports_home = '~/localmeasure-reports'
 
 scripts = {'content':       reports_home+'/pigscripts/content_types.pig',
@@ -26,14 +25,19 @@ def _setup():
     parser.add_argument('mongodb', help='db to connect to i.e. mongodb://127.0.0.1:27017')
     args = parser.parse_args()
     client = pymongo.MongoClient(args.mongodb)
-    db = client.localmeasure_metrics
+    db = client.localmeasure
+    db_metrics = client.localmeasure_metrics
 
 def _run_script(script, month):
 
     cmd = ['pig', '-x', 'local', 
-                '-param', 'DB=localhost:27017',
-                '-param', 'MONTH=2015May', 
-                '-f', 'pigscripts/content_reviews.pig']
+                '-param']
+
+    cmd.append('DB=' + args.mongodb)
+    cmd.append('-param')
+    cmd.append('MONTH=' + month)
+    cmd.append('-f')
+    cmd.append('script')
 
     call(cmd)
 
@@ -43,6 +47,6 @@ if __name__ == '__main__':
     today = date.today()
     this_month = today.strftime('%Y%b')
     print this_month
-    _run_script('blah', 'foo')
+    _run_script(scripts['content'], this_month)
     #write a document
 
