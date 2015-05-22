@@ -1,9 +1,7 @@
---Change these jar locations to point to the correct locations/version on your system.
-REGISTER $JARFILES/mongo-java-driver-2.13.0.jar
-REGISTER $JARFILES/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
-REGISTER $JARFILES/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
-
-REGISTER '$LM_UDF/lm_udf.py' using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
+REGISTER jar/mongo-java-driver-2.13.0.jar
+REGISTER jar/mongo-hadoop-core-1.3.3-SNAPSHOT.jar
+REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
+REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
 posts = LOAD 'mongodb://$DB:$DB_PORT/localmeasure.posts' 
     USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, secondary_venue_ids:chararray, text:chararray', 'id') 
