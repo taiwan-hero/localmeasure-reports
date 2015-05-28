@@ -1,7 +1,7 @@
 import os
 import sys
 from subprocess import call
-from datetime import date
+from datetime import datetime, date
 import pymongo
 import argparse
 
@@ -47,6 +47,7 @@ def _run_script(script, month):
 if __name__ == '__main__':
     _setup()
     #get the date string for today
+    now = datetime.now()
     today = date.today()
     this_month = today.strftime('%Y%b')
 
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     _run_script(scripts['reviews'], this_month)
 
     #keywords
-    db_metrics.keywords.remove({'post_month': this_month})
+    db_metrics.terms.remove({'post_month': this_month})
     _run_script(scripts['keywords'], this_month)
 
 
