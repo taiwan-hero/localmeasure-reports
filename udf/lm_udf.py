@@ -127,6 +127,15 @@ def map_keyword_source_counts(arg, source):
             count = int(elem[5])
     return count
 
+ #takes same input as above and returns summed counts
+ @outputSchema('total:int')
+ def sum_keyword_counts(arg):
+     total = 0
+     for elem in arg:
+         total = total + int(elem[5])    
+ 
+     return total
+
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_kind_counts(arg):
