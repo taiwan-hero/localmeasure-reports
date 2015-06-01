@@ -69,13 +69,10 @@ output_data =           FOREACH places_posts_regrouped GENERATE group.merchant_i
                                                                 group.place_name AS place_name, 
                                                                 group.post_month AS post_month, 
                                                                 group.word AS word, 
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'FB') AS FB,
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'IG') AS IG,
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, 'TW') AS TW,
-                                                                lm_udf.map_keyword_source_counts(places_posts_flattened, '4S') AS FS,
+                                                                lm_udf.map_keyword_source_counts(places_posts_flattened) AS counts,
                                                                 lm_udf.sum_keyword_counts(places_posts_flattened) AS total;
 
-output_data =           FILTER output_data BY (FB > 2 OR IG > 2 OR TW > 2 OR FS > 2);
+output_data =           FILTER output_data BY total > 1;
 
 STORE output_data INTO 'mongodb://$DB/localmeasure_metrics.keywords'
              USING com.mongodb.hadoop.pig.MongoInsertStorage('');

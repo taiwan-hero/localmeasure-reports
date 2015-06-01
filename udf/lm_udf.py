@@ -119,13 +119,16 @@ def get_day(mongo_date):
     return month.strftime('%Y%b%d')
 
 #helper function to get aggregated PIG output ready for Mongo insertion
-@outputSchema('count:int')
-def map_keyword_source_counts(arg, source):
-    count = 0
+@outputSchema('counts:map[]')
+def map_keyword_source_counts(arg):
+    data = {'FB': 0, 
+            'IG': 0, 
+            'TW': 0, 
+            '4S': 0}
     for elem in arg:
-        if str(elem[4]) == source:
-            count = int(elem[5])
-    return count
+        data[str(elem[4])] = int(elem[5])
+
+    return data
 
 #takes same input as above and returns summed counts
 @outputSchema('total:int')
