@@ -48,6 +48,7 @@ places_posts_distinct = DISTINCT places_posts_distinct;
 audits_filtered =   FILTER audits BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag' OR type MATCHES 'follow');
 
 audits_filtered =   FOREACH audits_filtered GENERATE type, 
+                                                     merchant_id,
                                                      CONCAT(SUBSTRING(created_at, 24, 28), SUBSTRING(created_at, 4, 7)) AS month,
                                                      actor#'label' AS user, 
                                                      subject#'origin_id' AS post_id;
