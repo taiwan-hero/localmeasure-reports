@@ -10,6 +10,7 @@ db = None
 db_metrics = None
 reports_home = '/home/ubuntu/localmeasure-reports'
 month = None
+report = None
 
 scripts = {'content':       reports_home+'/pigscripts/content_types.pig',
             'interactions': reports_home+'/pigscripts/interactions_users.pig',
@@ -23,10 +24,12 @@ def _setup():
     global db
     global db_metrics
     global month
+    global report
 
     parser = argparse.ArgumentParser(description='run a bunch of pig scripts')
     parser.add_argument('mongodb', help='db to connect to i.e. mongodb://127.0.0.1:27017')
     parser.add_argument('--month', help='month to run')
+    parser.add_argument('--report', help='which report to run only')
 
     args = parser.parse_args()
     print 'connecting to: {}'.format(args.mongodb)
@@ -46,6 +49,11 @@ def _setup():
 
     print 'month = {}'.format(month)
 
+    if args.report:
+        report = args.report
+
+    print 'report = {}'.format(report)
+
 def _run_script(script, month):
 
     cmd = ['pig', '-x', 'local', 
@@ -63,25 +71,30 @@ def _run_script(script, month):
 if __name__ == '__main__':
     _setup()
 
-    #content types
-    db_metrics.content.remove({'post_month': month})
-    _run_script(scripts['content'], month)
+    if not report or report == 'content':
+        #content types
+        db_metrics.content.remove({'post_month': month})
+        _run_script(scripts['content'], month)
 
-    #interactions users
-    db_metrics.interactions.remove({'month': month})
-    _run_script(scripts['interactions'], month)
+    if not report or report == 'interactions':
+        #interactions users
+        db_metrics.interactions.remove({'month': month})
+        _run_script(scripts['interactions'], month)
 
-    #posters
-    db_metrics.posters.remove({'post_month': month})
-    _run_script(scripts['posters'], month)
+    if not report or report == 'posters':
+        #posters
+        db_metrics.posters.remove({'post_month': month})
+        _run_script(scripts['posters'], month)
 
-    #reviews
-    db_metrics.reviews.remove({'month': month})
-    _run_script(scripts['reviews'], month)
+    if not report or report == 'reviews':
+        #reviews
+        db_metrics.reviews.remove({'month': month})
+        _run_script(scripts['reviews'], month)
 
-    #keywords
-    db_metrics.terms.remove({'post_month': month})
-    _run_script(scripts['keywords'], month)
+    if not report or report == 'keywords':
+        #keywords
+        db_metrics.terms.remove({'post_month': month})
+        _run_script(scripts['keywords'], month)
 
 
     
