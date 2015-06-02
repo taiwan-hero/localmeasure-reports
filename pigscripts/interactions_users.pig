@@ -53,6 +53,7 @@ audits_filtered =   FOREACH audits_filtered GENERATE type,
                                                      subject#'origin_id' AS post_id;
 
 audits_filtered =   FOREACH audits_filtered GENERATE type, 
+                                                     merchant_id,
                                                      month,
                                                      user, 
                                                      post_id,
@@ -67,6 +68,7 @@ interactions =      FILTER audits_filtered BY (type MATCHES 'like' OR type MATCH
 -- here, we create a new type called 'int' for unique posts
 unique =            FILTER interactions BY (type MATCHES 'like' OR type MATCHES 'reply');
 unique =            FOREACH unique GENERATE 'int' AS type,
+                                            merchant_id,
                                             month,
                                             user,
                                             post_id,
