@@ -78,6 +78,9 @@ int_all =           UNION interactions, unique;
 
 audits_joined =     JOIN int_all BY post_id, places_posts_distinct BY post_id;
 
+-- filter out the results where merchant_id's dont match
+audits_joined =     FILTER audits_joined BY places_posts_distinct::merchant_id == int_all::merchant_id;
+
 audits_monthly =    FOREACH audits_joined GENERATE int_all::type AS type, 
                                                    int_all::user AS user, 
                                                    int_all::source AS source, 
@@ -91,6 +94,9 @@ places_users =              DISTINCT places_users;
 
 -- Next, join places and users 
 follows_places_joined =     JOIN follows BY user, places_users BY user;
+
+-- filter out the results where merchant_id's dont match
+follows_places_joined =     FILTER follows_places_joined BY places_users::merchant_id == follows::merchant_id;
 
 follows_places_users =      FOREACH follows_places_joined GENERATE follows::type AS type, 
                                                               follows::user AS user,
