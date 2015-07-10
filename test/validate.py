@@ -11,6 +11,8 @@ args = None
 db = None
 metrics_db = None
 
+months = ['2014Jun', '2014Jul', '2014Aug', '2014Sep', '2014Oct', '2014Nov', '2014Dec', '2015Jan', '2015Feb', '2015Mar', '2015Apr', '2015May']
+
 def get_options():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('mongodb', help='db to connect to i.e. mongodb://127.0.0.1:27017')
@@ -38,25 +40,20 @@ def validate_content(merchant_id, month):
     erroneous_reports = []
     content_reports = metrics_db.content.find({'merchant_id': merchant_id})
 
-    for cr in content_reports:
-        places = db.places.find({'name': cr['place_name']})
-        venues = []
-        for place in places:
-            for venue in place['venue_ids']:
-                if venue not in venues:
-                    venues.append(venue)
+    places = db.places.find({'merchant_id': ObjectId(merchant_id)})
+    venues = []
+    for place in places:
+        for venue_id in place['venue_ids']:
+            venues.append(venue_id)
 
-        if not venues:
-            print 'no venues to query for this place name'
-            continue
+    print "venue_ids = {}".format(venues)
+    start = datetime.datetime.strptime(month + '01', "%Y%b%d")
+    end = datetime.datetime.strptime(month + '31', "%Y%b%d")
 
-        start = datetime.datetime.strptime(month + '01', "%Y%b%d")
-        end = datetime.datetime.strptime(month + '31', "%Y%b%d")
+    post_count = db.posts.find({'secondary_venue_ids': {'$in': venues}, 
+                                'post_time': {'$gt': start, '$lt': end}}).count()
 
-        post_count = db.posts.find({'secondary_venue_ids': {'$in': venues}, 
-                                    'post_time': {'$gt': start, '$lt': end}}).count()
-
-        print 'posts found {} : {} at {}'.format(post_count, cr['total'], cr['place_name'])
+    print 'posts found {} '.format(post_count)
 
 def find_all_venue_mentions(merchant_id):
     mentions = []
@@ -112,12 +109,32 @@ def validate_interactions(merchant_id, month):
 
         print '  {} : {}'.format(place['name'], post_count)
 
+def list_users_interactions(user_name, month):
+    start = datetime.datetime.strptime(month + '01', "%Y%b%d")
+    next_month = int(start.strftime('%m')) + 1
+    year = int(start.strftime('%Y'))
+    if next_month == 13:
+        next_month = 1
+        year = year + 1
+
+    end = datetime.datetime.strptime(str(year) + str(next_month).zfill(2) + '01', "%Y%m%d")
+
+    this_months_likes = db.audits.find({'actor.label': user_name, 'type': 'like', 'created_at': {'$gt': start, '$lt': end}})
+
+    for like in this_months_likes:
+        orig_post = db.posts.find_one({'_id': like['subject']['origin_id']})
+        if not orig_post:
+            continue
+        print 'liked: {} at:'.format(orig_post['_id'])
+        venues = orig_post['secondary_venue_ids']
+        post_places = db.places.find({'venue_ids': {'$in': venues}})
+        for post_place in post_places:
+            print '  place: {} - {}'.format(post_place['name'], post_place['merchant_id'])
 
 if __name__ == '__main__':
     setup()
-    months = ['2014Jun', '2014Jul', '2014Aug', '2014Sep', '2014Oct', '2014Nov', '2014Dec', '2015Jan', '2015Feb', '2015Mar', '2015Apr', '2015May']
-    for month in months:
-        validate_interactions('5146938ef9bfa509d465edbb', month)
+    validate_content(args.merchant_id, args.month)
+
 
 
 

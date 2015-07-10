@@ -163,6 +163,28 @@ def sum_kind_counts(arg):
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
+def map_segment_counts(arg):
+    data = {'FB': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            'IG': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            'TW': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
+
+    for elem in arg:
+        data[str(elem[4])][str(elem[5])] = int(elem[6])
+
+    return data
+
+#takes same input as above and returns summed counts
+@outputSchema('total:int')
+def sum_segment_counts(arg):
+    total = 0
+    for elem in arg:
+        total = total + int(elem[6])   
+
+    return total
+
+#helper function to get aggregated PIG output ready for Mongo insertion
+@outputSchema('counts:map[]')
 def map_interaction_counts(arg):
     interactions = {'FB': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
                     'IG': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 

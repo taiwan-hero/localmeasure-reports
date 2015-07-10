@@ -16,7 +16,8 @@ scripts = {'content':       reports_home+'/pigscripts/content_types.pig',
             'interactions': reports_home+'/pigscripts/interactions_users.pig',
             'posters':      reports_home+'/pigscripts/posters.pig',
             'reviews':      reports_home+'/pigscripts/content_reviews.pig',
-            'keywords':     reports_home+'/pigscripts/content_keywords.pig'}
+            'keywords':     reports_home+'/pigscripts/content_keywords.pig',
+            'segments':     reports_home+'/pigscripts/post_segments.pig'}
 
 
 def _setup():
@@ -95,6 +96,11 @@ if __name__ == '__main__':
         #keywords
         db_metrics.terms.remove({'post_month': month})
         _run_script(scripts['keywords'], month)
+
+    if not report or report == 'segments':
+        #segments
+        db_metrics.terms.remove({'month': month})
+        _run_script(scripts['segments'], month)
 
 
     
