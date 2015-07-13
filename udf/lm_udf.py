@@ -112,11 +112,18 @@ def get_month(mongo_date):
     return month.strftime('%Y%b')
 
 #retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
-@outputSchema('month:chararray')
+@outputSchema('day:chararray')
 def get_day(mongo_date):
     month = datetime.strptime(str(mongo_date), "%a %b %d %H:%M:%S %Z %Y")
 
-    return month.strftime('%Y%b%d')
+    return month.strftime('%d')
+
+#retrieves a raw date format from mongo-hadoop PIG and returns month string (ie: 2014Jan)
+@outputSchema('hour:chararray')
+def get_hour(mongo_date):
+    month = datetime.strptime(str(mongo_date), "%a %b %d %H:%M:%S %Z %Y")
+
+    return month.strftime('%H')
 
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
@@ -164,13 +171,16 @@ def sum_kind_counts(arg):
 #helper function to get aggregated PIG output ready for Mongo insertion
 @outputSchema('counts:map[]')
 def map_segment_counts(arg):
-    data = {'FB': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
-            'IG': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
-            'TW': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
-            '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
+    data = {}
+
+    for i in range(24):
+        data["%02d"%i] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0}
+
+    data['total'] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0}
 
     for elem in arg:
-        data[str(elem[4])][str(elem[5])] = int(elem[6])
+        data[elem[5]][elem[6]] += 1
+        data['total'][elem[6]] += 1
 
     return data
 

@@ -131,9 +131,23 @@ def list_users_interactions(user_name, month):
         for post_place in post_places:
             print '  place: {} - {}'.format(post_place['name'], post_place['merchant_id'])
 
+def validate_segment_totals():
+    for segment in metrics_db.segments.find({}):
+        totals = segment['counts']['total']
+        sums = {"FB": 0, "IG": 0, "4S": 0, "TW": 0}
+
+        for i in range(24):
+            for source in sums:
+                sums[source] += segment['counts']["%02d"%i][source]
+
+        for source in sums:
+            print '{} {}'.format(sums[source], totals[source])
+            if sums[source] != totals[source]:
+                print 'problem'
+
 if __name__ == '__main__':
     setup()
-    validate_content(args.merchant_id, args.month)
+    validate_segment_totals()
 
 
 
