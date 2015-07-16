@@ -97,7 +97,7 @@ if __name__ == '__main__':
         db_metrics.terms.remove({'post_month': month})
         _run_script(scripts['keywords'], month)
 
-    if not report or report == 'segments':
+    if report == 'segments':
         #segments
         db_metrics.terms.remove({'month': month})
         _run_script(scripts['segments'], month)
