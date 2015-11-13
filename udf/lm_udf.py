@@ -250,7 +250,25 @@ def map_review_counts(arg):
 def to_object_id(arg):
     return arg
 
+@outputSchema('accounts:map[]')
+def linked_accounts(arg):
+    account_ids = {'FB': [], 'IG': [], 'TW': [], '4S': []}
 
+    for elem in arg:
+        if elem == 'facebook' or elem == 'facebookpages':
+            for account in arg[elem]:
+                account_ids['FB'].append('FB-' + account['account_id'])
+        elif elem == 'instagram':
+            for account in arg[elem]:
+                account_ids['IG'].append('IG-' + account['account_id'])
+        elif elem == 'twitter':
+            for account in arg[elem]:
+                account_ids['TW'].append('TW-' + account['account_id'])
+        elif elem == 'foursquare':
+            for account in arg[elem]:
+                account_ids['4S'].append('4S-' + account['account_id'])
+
+    return account_ids
 
 
 

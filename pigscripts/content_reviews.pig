@@ -30,7 +30,7 @@ split_posts =               FILTER posts BY kind MATCHES 'review';
 -- Put venue_id's on a single row each ready to be joined with Places
 split_posts =               FOREACH split_posts GENERATE id, 
                                         SUBSTRING(id, 0, 2) AS source,
-                                        CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
+                                        lm_udf.get_month(post_time) AS month,
                                         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id,
                                         rating#'value' AS value,
                                         rating#'scale' AS scale;

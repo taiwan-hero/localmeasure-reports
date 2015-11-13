@@ -26,7 +26,7 @@ active_split_places =   FOREACH active_places GENERATE active_merchants::id AS m
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
 split_posts =           FOREACH posts GENERATE text, 
                                                 SUBSTRING(id, 0, 2) AS source,
-                                                CONCAT(SUBSTRING(post_time, 24, 28), SUBSTRING(post_time, 4, 7)) AS month,
+                                                lm_udf.get_month(post_time) AS month,
                                                 FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
 
 split_posts =           FILTER split_posts BY month == '$MONTH';
