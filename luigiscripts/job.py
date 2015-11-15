@@ -8,6 +8,8 @@ import argparse
 args = None
 db = None
 db_metrics = None
+#uncomment if on mac
+#reports_home = '/Users/tang/Projects/localmeasure-reports'
 reports_home = '/home/ubuntu/localmeasure-reports'
 month = None
 report = None
@@ -57,7 +59,7 @@ def _setup():
 
 def _run_script(script, month):
 
-    cmd = ['pig', '-x', 'local', 
+    cmd = ['pig', '-x', 'local',
                 '-param']
 
     cmd.append('DB=' + args.mongodb)
@@ -103,6 +105,6 @@ if __name__ == '__main__':
         _run_script(scripts['segments'], month)
 
 
-    
+
 
 

@@ -250,27 +250,23 @@ def map_review_counts(arg):
 def to_object_id(arg):
     return arg
 
-@outputSchema('accounts:map[]')
-def linked_accounts(arg):
-    account_ids = {'FB': [], 'IG': [], 'TW': [], '4S': []}
-
-    for elem in arg:
-        if elem == 'facebook' or elem == 'facebookpages':
-            for account in arg[elem]:
-                account_ids['FB'].append('FB-' + account['account_id'])
-        elif elem == 'instagram':
-            for account in arg[elem]:
-                account_ids['IG'].append('IG-' + account['account_id'])
-        elif elem == 'twitter':
-            for account in arg[elem]:
-                account_ids['TW'].append('TW-' + account['account_id'])
-        elif elem == 'foursquare':
-            for account in arg[elem]:
-                account_ids['4S'].append('4S-' + account['account_id'])
-
-    return account_ids
-
-
+@outputSchema('is_own_post:int')
+def is_own_post(linked_accounts, post_id):
+    service = post_id[:2]
+    if service == 'FB':
+        for account in linked_accounts['facebook']:
+            account_ids['FB'].append('FB-' + account['account_id'])
+        for account in linked_accounts['facebookpages']:
+            account_ids['FB'].append('FB-' + account['account_id'])
+    elif service == 'IG':
+        for account in linked_accounts['instagram']:
+            account_ids['IG'].append('IG-' + account['account_id'])
+    elif service == 'TW':
+        for account in linked_accounts['twitter']:
+            account_ids['TW'].append('TW-' + account['account_id'])
+    elif service == '4S':
+        for account in linked_accounts['foursquare']:
+            account_ids['4S'].append('4S-' + account['account_id'])
 
 
 
