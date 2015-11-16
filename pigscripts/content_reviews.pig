@@ -4,8 +4,8 @@ REGISTER jar/mongo-hadoop-pig-1.3.3-SNAPSHOT.jar
 REGISTER udf/lm_udf.py using org.apache.pig.scripting.jython.JythonScriptEngine as lm_udf;
 
 posts = LOAD 'mongodb://$DB/localmeasure.posts' 
-        USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating', 'id') 
-        AS (id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating); 
+        USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating, poster_id:chararray', 'id') 
+        AS (id:chararray, post_time:chararray, kind:chararray, secondary_venue_ids:chararray, rating, poster_id:chararray); 
 
 places = LOAD 'mongodb://$DB/localmeasure.places' 
          USING com.mongodb.hadoop.pig.MongoLoader('id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray', 'id') 
@@ -35,6 +35,7 @@ split_posts =               FILTER posts BY kind MATCHES 'review';
 
 -- Put venue_id's on a single row each ready to be joined with Places
 split_posts =               FOREACH split_posts GENERATE id, 
+                                        poster_id,
                                         SUBSTRING(id, 0, 2) AS source,
                                         lm_udf.get_month(post_time) AS month,
                                         FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id,
@@ -52,7 +53,7 @@ places_posts_distinct =     FOREACH places_posts_joined GENERATE active_split_pl
                                                              split_posts::source AS source,
                                                              split_posts::id AS post_id,
                                                              (chararray)split_posts::value AS value,
-                                                             lm_udf.is_own_post(active_split_places::linked_accounts, split_posts::id) AS own_post;
+                                                             lm_udf.is_own_post(active_split_places::linked_accounts, split_posts::poster_id) AS own_post;
 
 places_posts_distinct = FILTER places_posts_distinct BY own_post == 0;
 places_posts_distinct =      DISTINCT places_posts_distinct;
