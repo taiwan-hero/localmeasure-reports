@@ -47,6 +47,9 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
                                                              split_posts::source AS source,
                                                              split_posts::kind AS kind,
                                                              lm_udf.is_own_post(active_split_places::linked_accounts, split_posts::id) AS own_post;
+
+places_posts_distinct = FILTER places_posts_distinct BY own_post == 0;
+
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 places_posts_counted =  GROUP places_posts_distinct BY (merchant_id, place_name, post_month, source, kind);
