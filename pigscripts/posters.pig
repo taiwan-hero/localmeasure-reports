@@ -12,9 +12,13 @@ places = LOAD 'mongodb://$DB/localmeasure.places'
     AS (id:chararray, name:chararray, merchant_id:chararray, venue_ids:chararray);
 
 merchants = LOAD 'mongodb://$DB/localmeasure.merchants' 
-    USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
+    USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription, linked_accounts', 'id');
 
-merchants2 =            FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
+merchants2 =            FOREACH merchants GENERATE $0 AS id,
+                                                   $1 AS name,
+                                                   lm_udf.is_expired($2#'expires_at') AS expiry,
+                                                   $3 AS linked_accounts;
+
 active_merchants =      FILTER merchants2 BY expiry == 0;
 
 active_places =         JOIN places BY merchant_id, active_merchants BY id;
@@ -22,10 +26,12 @@ active_places =         JOIN places BY merchant_id, active_merchants BY id;
 -- Strip off the leading [] chars in the venue_id array. This shouldn't be necessary with Mongo loader then flatten venue_ids to a row each.
 active_split_places =   FOREACH active_places GENERATE places::name AS place_name, 
                                                        active_merchants::id AS merchant_id,
-                                                       FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id;
+                                                       FLATTEN(TOKENIZE(lm_udf.venue_id_strip(venue_ids))) AS venue_id,
+                                                       active_merchants::linked_accounts AS linked_accounts;
 
 -- Flatten teh posts collection similarly, TODO: create UDF's for all the date fields with a date_helper UDF
-split_posts =           FOREACH posts GENERATE poster_id, 
+split_posts =           FOREACH posts GENERATE id,
+                                               poster_id, 
                                                SUBSTRING(id, 0, 2) AS source,
                                                lm_udf.get_month(post_time) AS month,
                                                FLATTEN(TOKENIZE(lm_udf.venue_id_strip(secondary_venue_ids))) AS venue_id;
@@ -38,7 +44,10 @@ places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places
                                                              active_split_places::place_name AS place_name, 
                                                              split_posts::month AS post_month, 
                                                              split_posts::source AS source, 
-                                                             split_posts::poster_id AS poster_id;
+                                                             split_posts::poster_id AS poster_id,
+                                                             lm_udf.is_own_post(active_split_places::linked_accounts, split_posts::id) AS own_post;
+
+places_posts_distinct = FILTER places_posts_distinct BY own_post == 0;
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 places_posts_counted =  GROUP places_posts_distinct BY (merchant_id, place_name, post_month, source);

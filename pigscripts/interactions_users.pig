@@ -16,9 +16,13 @@ audits = LOAD 'mongodb://$DB/localmeasure.audits'
         AS (id:chararray, category:chararray, merchant_id:chararray, created_at:chararray, type:chararray, subject, actor);
 
 merchants = LOAD 'mongodb://$DB/localmeasure.merchants' 
-            USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription', 'id');
+            USING com.mongodb.hadoop.pig.MongoLoader('id, name, subscription, linked_accounts', 'id');
 
-merchants2 =        FOREACH merchants GENERATE $0 AS id, $1 AS name, lm_udf.is_expired($2#'expires_at') AS expiry;
+merchants2 =            FOREACH merchants GENERATE $0 AS id,
+                                                   $1 AS name,
+                                                   lm_udf.is_expired($2#'expires_at') AS expiry,
+                                                   $3 AS linked_accounts;
+
 active_merchants =  FILTER merchants2 BY expiry == 0;
 
 -- Only work with places owned by NON-EXPIRED merchants
@@ -27,7 +31,8 @@ active_places =     JOIN places BY merchant_id, active_merchants BY id;
 -- Put venue_id's on a single row each ready to be joined with Posts
 active_split_places = FOREACH active_places GENERATE places::name AS name, 
                                                     active_merchants::id AS merchant_id, 
-                                                    FLATTEN(TOKENIZE(lm_udf.venue_id_strip(places::venue_ids))) AS venue_id;
+                                                    FLATTEN(TOKENIZE(lm_udf.venue_id_strip(places::venue_ids))) AS venue_id,
+                                                    active_merchants::linked_accounts AS linked_accounts;
 
 -- Put venue_id's on a single row each ready to be joined with Places
 split_posts =       FOREACH posts GENERATE id, 
@@ -41,8 +46,10 @@ places_posts_joined =   JOIN active_split_places BY venue_id, split_posts BY ven
 
 places_posts_distinct = FOREACH places_posts_joined GENERATE active_split_places::name AS place_name, 
                                                              split_posts::id AS post_id,
-                                                             active_split_places::merchant_id AS merchant_id;
+                                                             active_split_places::merchant_id AS merchant_id,
+                                                             lm_udf.is_own_post(active_split_places::linked_accounts, split_posts::id) AS own_post;
 
+places_posts_distinct = FILTER places_posts_distinct BY own_post == 0;
 places_posts_distinct = DISTINCT places_posts_distinct;
 
 audits_filtered =   FILTER audits BY (type MATCHES 'like' OR type MATCHES 'reply' OR type MATCHES 'tag' OR type MATCHES 'follow');

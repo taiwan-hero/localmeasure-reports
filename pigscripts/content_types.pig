@@ -18,7 +18,7 @@ merchants2 =            FOREACH merchants GENERATE $0 AS id,
                                                    $1 AS name,
                                                    lm_udf.is_expired($2#'expires_at') AS expiry,
                                                    $3 AS linked_accounts;
-                                                   
+
 active_merchants =      FILTER merchants2 BY expiry == 0;
 
 active_places =         JOIN places BY merchant_id, active_merchants BY id;
