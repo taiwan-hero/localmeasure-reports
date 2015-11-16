@@ -253,14 +253,15 @@ def to_object_id(arg):
 @outputSchema('is_own_post:int')
 def is_own_post(linked_accounts, poster_id):
     service = poster_id[:2]
-    if service == 'FB' and 'facebook' in linked_accounts:
-        for account in linked_accounts['facebook']:
-            if poster_id == 'FB-' + str(account['account_id']):
-                return 1
-    elif service == 'FB' and 'facebookpages' in linked_accounts:
-        for account in linked_accounts['facebookpages']:
-            if poster_id == 'FB-' + str(account['account_id']):
-                return 1
+    if service == 'FB':
+        if 'facebook' in linked_accounts:
+            for account in linked_accounts['facebook']:
+                if poster_id == 'FB-' + str(account['account_id']):
+                    return 1
+        elif 'facebookpages' in linked_accounts:
+            for account in linked_accounts['facebookpages']:
+                if poster_id == 'FB-' + str(account['account_id']):
+                    return 1
     elif service == 'IG' and 'instagram' in linked_accounts:
         for account in linked_accounts['instagram']:
             if poster_id == 'IG-' + str(account['account_id']):
