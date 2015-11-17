@@ -21,7 +21,7 @@ merchants = LOAD 'mongodb://$DB/localmeasure.merchants'
 merchants2 =            FOREACH merchants GENERATE $0 AS id,
                                                    $1 AS name,
                                                    lm_udf.is_expired($2#'expires_at') AS expiry,
-                                                   $3 AS linked_accounts;
+                                                   lm_udf.parse_linked_accounts($3) AS linked_accounts;
 
 active_merchants =  FILTER merchants2 BY expiry == 0;
 

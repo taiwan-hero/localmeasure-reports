@@ -250,30 +250,34 @@ def map_review_counts(arg):
 def to_object_id(arg):
     return arg
 
+@outputSchema('accounts:map[]')
+def parse_linked_accounts(arg):
+    prefixes = {'facebook': 'FB',
+                'facebookpages': 'FB',
+                'instagram': 'IG',
+                'twitter': 'TW',
+                'foursquare': '4S'}
+
+    account_ids = {'FB': [], 'IG': [], 'TW': [], '4S': []}
+
+    for elem in arg:
+        if elem not in prefixes:
+            continue
+        prefix = prefixes[elem]
+        for account in arg[elem]:
+            account_ids[prefix].append(prefix + '-' + account['account_id'])
+
+    return account_ids
+
 @outputSchema('is_own_post:int')
 def is_own_post(linked_accounts, poster_id):
     service = poster_id[:2]
-    if service == 'FB':
-        if 'facebook' in linked_accounts:
-            for account in linked_accounts['facebook']:
-                if poster_id == 'FB-' + str(account['account_id']):
-                    return 1
-        elif 'facebookpages' in linked_accounts:
-            for account in linked_accounts['facebookpages']:
-                if poster_id == 'FB-' + str(account['account_id']):
-                    return 1
-    elif service == 'IG' and 'instagram' in linked_accounts:
-        for account in linked_accounts['instagram']:
-            if poster_id == 'IG-' + str(account['account_id']):
-                return 1
-    elif service == 'TW' and 'twitter' in linked_accounts:
-        for account in linked_accounts['twitter']:
-            if poster_id == 'TW-' + str(account['account_id']):
-                return 1
-    elif service == '4S' and 'foursquare' in linked_accounts:
-        for account in linked_accounts['foursquare']:
-            if poster_id == '4S-' + str(account['account_id']):
-                return 1
+    if service not in linked_accounts:
+        return 0
+
+    for account_id in linked_accounts[service]:
+        if poster_id == account_id[0]:
+            return 1
 
     return 0
 
