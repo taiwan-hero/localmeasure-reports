@@ -272,7 +272,7 @@ def parse_linked_accounts(arg):
 @outputSchema('is_own_post:int')
 def is_own_post(linked_accounts, poster_id):
     service = poster_id[:2]
-    if service not in linked_accounts:
+    if not linked_accounts or service not in linked_accounts:
         return 0
 
     for account_id in linked_accounts[service]:
