@@ -131,7 +131,8 @@ def map_keyword_source_counts(arg):
     data = {'FB': 0, 
             'IG': 0, 
             'TW': 0, 
-            '4S': 0}
+            '4S': 0,
+            'WB': 0}
     for elem in arg:
         data[str(elem[4])] = int(elem[5])
 
@@ -152,7 +153,8 @@ def map_kind_counts(arg):
     data = {'FB': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
             'IG': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
             'TW': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
-            '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
+            '4S': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0},
+            'WB': {'photo': 0, 'video': 0, 'feed': 0, 'tip': 0}}
 
     for elem in arg:
         data[str(elem[3])][str(elem[4])] = int(elem[5])
