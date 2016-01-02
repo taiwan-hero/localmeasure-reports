@@ -174,9 +174,9 @@ def map_segment_counts(arg):
     data = {}
 
     for i in range(24):
-        data["%02d"%i] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0}
+        data["%02d"%i] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0, "WB": 0}
 
-    data['total'] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0}
+    data['total'] = {"FB": 0, "IG": 0, "4S": 0, "TW": 0, "WB": 0}
 
     for elem in arg:
         data[elem[5]][elem[6]] += 1
@@ -199,7 +199,8 @@ def map_interaction_counts(arg):
     interactions = {'FB': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
                     'IG': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
                     'TW': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}, 
-                    '4S': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}}
+                    '4S': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0},
+                    'WB': {'like': 0, 'reply': 0, 'int': 0, 'tag': 0, 'follow': 0}}
 
     for elem in arg:
         interactions[str(elem[4])][str(elem[5])] = int(elem[6])
@@ -212,7 +213,8 @@ def map_poster_counts(arg):
     data = {'FB': 0,
             'IG': 0,
             'TW': 0,
-            '4S': 0}
+            '4S': 0,
+            'WB': 0}
 
     for elem in arg:
         data[str(elem[3])] = int(elem[4])
@@ -256,9 +258,10 @@ def parse_linked_accounts(arg):
                 'facebookpages': 'FB',
                 'instagram': 'IG',
                 'twitter': 'TW',
-                'foursquare': '4S'}
+                'foursquare': '4S',
+                'weibo': 'WB'}
 
-    account_ids = {'FB': [], 'IG': [], 'TW': [], '4S': []}
+    account_ids = {'FB': [], 'IG': [], 'TW': [], '4S': [], 'WB': []}
 
     for elem in arg:
         if elem not in prefixes:
